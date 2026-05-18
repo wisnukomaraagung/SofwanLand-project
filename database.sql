@@ -54,6 +54,10 @@ CREATE TABLE IF NOT EXISTS barang_masuk (
     id_barang INT NOT NULL,
     jumlah INT NOT NULL,
     tanggal DATE NOT NULL,
+    harga_satuan DECIMAL(15,2) DEFAULT 0,
+    supplier VARCHAR(255),
+    no_kuitansi VARCHAR(100),
+    foto_kuitansi VARCHAR(255),
     keterangan TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_barang) REFERENCES barang(id)

@@ -53,6 +53,43 @@ class BarangModel {
         ")->fetchAll();
     }
 
+    public function getDashboardSummary(): array {
+        $bulanIni = date('Y-m');
+        
+        try {
+            $pengeluaran = $this->db->query("SELECT COALESCE(SUM(harga_satuan * jumlah), 0) FROM barang_masuk WHERE DATE_FORMAT(tanggal, '%Y-%m') = '$bulanIni'")->fetchColumn();
+        } catch (PDOException $e) {
+            // Jika kolom belum ada (belum migrasi), jalankan ALTER TABLE
+            if (strpos($e->getMessage(), 'Unknown column') !== false) {
+                $this->db->exec("ALTER TABLE barang_masuk ADD COLUMN harga_satuan DECIMAL(15,2) DEFAULT 0;");
+                $this->db->exec("ALTER TABLE barang_masuk ADD COLUMN supplier VARCHAR(255) NULL;");
+                $this->db->exec("ALTER TABLE barang_masuk ADD COLUMN no_kuitansi VARCHAR(100) NULL;");
+                $this->db->exec("ALTER TABLE barang_masuk ADD COLUMN foto_kuitansi VARCHAR(255) NULL;");
+                
+                // Retry
+                $pengeluaran = $this->db->query("SELECT COALESCE(SUM(harga_satuan * jumlah), 0) FROM barang_masuk WHERE DATE_FORMAT(tanggal, '%Y-%m') = '$bulanIni'")->fetchColumn();
+            } else {
+                throw $e;
+            }
+        }
+        
+        $jenisBarang = $this->db->query("SELECT COUNT(*) FROM barang")->fetchColumn();
+        
+        $transaksiMasuk = $this->db->query("SELECT COUNT(*) FROM barang_masuk")->fetchColumn();
+        
+        $transaksiKeluar = $this->db->query("SELECT COUNT(*) FROM barang_keluar")->fetchColumn();
+        
+        $totalPengeluaran = $this->db->query("SELECT COALESCE(SUM(harga_satuan * jumlah), 0) FROM barang_masuk")->fetchColumn();
+        
+        return [
+            'pengeluaran_bulan_ini' => $pengeluaran,
+            'jenis_barang' => $jenisBarang,
+            'transaksi_masuk' => $transaksiMasuk,
+            'transaksi_keluar' => $transaksiKeluar,
+            'total_pengeluaran' => $totalPengeluaran
+        ];
+    }
+
     public function getKeluar(): array {
         return $this->db->query("
             SELECT bk.*, b.nama_barang, b.satuan, p.nama_proyek
@@ -67,8 +104,13 @@ class BarangModel {
         $pdo = $this->db;
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare("INSERT INTO barang_masuk (id_barang, jumlah, tanggal, keterangan) VALUES (?,?,?,?)");
-            $stmt->execute([$data['id_barang'], $data['jumlah'], $data['tanggal'], $data['keterangan']]);
+            $stmt = $pdo->prepare("INSERT INTO barang_masuk (id_barang, jumlah, tanggal, harga_satuan, supplier, no_kuitansi, foto_kuitansi, keterangan) VALUES (?,?,?,?,?,?,?,?)");
+            $stmt->execute([
+                $data['id_barang'], $data['jumlah'], $data['tanggal'], 
+                $data['harga_satuan'] ?? 0, $data['supplier'] ?? null, 
+                $data['no_kuitansi'] ?? null, $data['foto_kuitansi'] ?? null, 
+                $data['keterangan'] ?? null
+            ]);
             $pdo->prepare("UPDATE barang SET stok = stok + ? WHERE id = ?")->execute([$data['jumlah'], $data['id_barang']]);
             $pdo->commit();
             return true;
@@ -85,6 +127,54 @@ class BarangModel {
             $stmt = $pdo->prepare("INSERT INTO barang_keluar (id_barang, id_proyek, jumlah, tanggal, keterangan) VALUES (?,?,?,?,?)");
             $stmt->execute([$data['id_barang'], $data['id_proyek'], $data['jumlah'], $data['tanggal'], $data['keterangan']]);
             $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$data['jumlah'], $data['id_barang']]);
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function getMasukById(int $id): ?array {
+        $stmt = $this->db->prepare("SELECT * FROM barang_masuk WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function updateMasuk(int $id, array $data): bool {
+        $pdo = $this->db;
+        $pdo->beginTransaction();
+        try {
+            $old = $pdo->query("SELECT id_barang, jumlah FROM barang_masuk WHERE id = $id")->fetch();
+            if ($old) {
+                $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$old['jumlah'], $old['id_barang']]);
+                $pdo->prepare("UPDATE barang SET stok = stok + ? WHERE id = ?")->execute([$data['jumlah'], $data['id_barang']]);
+                
+                $stmt = $pdo->prepare("UPDATE barang_masuk SET id_barang=?, jumlah=?, tanggal=?, harga_satuan=?, supplier=?, no_kuitansi=?, keterangan=? WHERE id=?");
+                $stmt->execute([
+                    $data['id_barang'], $data['jumlah'], $data['tanggal'], 
+                    $data['harga_satuan'] ?? 0, $data['supplier'] ?? null, 
+                    $data['no_kuitansi'] ?? null, $data['keterangan'] ?? null,
+                    $id
+                ]);
+            }
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function deleteMasuk(int $id): bool {
+        $pdo = $this->db;
+        $pdo->beginTransaction();
+        try {
+            $masuk = $pdo->query("SELECT id_barang, jumlah FROM barang_masuk WHERE id = $id")->fetch();
+            if ($masuk) {
+                $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$masuk['jumlah'], $masuk['id_barang']]);
+                $pdo->prepare("DELETE FROM barang_masuk WHERE id = ?")->execute([$id]);
+            }
             $pdo->commit();
             return true;
         } catch (Exception $e) {
