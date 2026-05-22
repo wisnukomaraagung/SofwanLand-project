@@ -5,7 +5,7 @@ services:
     build: .
     container_name: php_app
     ports:
-      - "9090:80"
+      - "7070:80"
     volumes:
       - .:/var/www/html
     environment:
