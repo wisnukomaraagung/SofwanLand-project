@@ -8,7 +8,6 @@ class BarangController {
     public function __construct() {
         $this->model      = new BarangModel();
         $this->proyekModel = new ProyekModel();
-        session_start();
     }
 
     public function index() {

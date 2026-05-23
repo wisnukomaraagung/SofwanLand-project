@@ -16,7 +16,7 @@
 <nav class="navbar d-flex justify-content-between align-items-center">
 
   <div class="d-flex align-items-center">
-        <img src="assets/logoputih.png" width="80" class="me-2">
+        <img src="<?= BASE_URL ?>/public/assets/logoputih.png" width="80" class="me-2">
     </div>
 
     <button class="hamburger" id="hamburgerBtn" onclick="toggleMenu()">
@@ -41,6 +41,13 @@
             <?= $item['label'] ?>
         </a>
         <?php endforeach; ?>
+
+        <div style="flex-grow: 1;"></div>
+        
+        <a href="<?= BASE_URL ?>/public/index.php?page=login&action=logout" class="nav-link" style="color: #c0392b; font-weight: 600;" onclick="return confirm('Apakah Anda yakin ingin logout?');">
+            <span class="nav-icon">🚪</span>
+            Logout
+        </a>
     </div>
 </nav>
 

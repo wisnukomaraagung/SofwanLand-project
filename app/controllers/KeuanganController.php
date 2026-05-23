@@ -6,7 +6,6 @@ class KeuanganController {
 
     public function __construct() {
         $this->model = new KeuanganModel();
-        session_start();
     }
 
     public function index() {

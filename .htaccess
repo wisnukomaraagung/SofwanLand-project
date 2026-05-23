@@ -1,5 +1,12 @@
-Options -Indexes
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ public/index.php [QSA,L]
+<IfModule mod_rewrite.c>
+    Options -Indexes
+    RewriteEngine On
+    
+    # Redirect root to public/
+    RewriteRule ^$ public/ [L]
+    
+    # Send all other requests to public/ if they don't exist
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

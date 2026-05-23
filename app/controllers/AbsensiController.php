@@ -6,7 +6,6 @@ class AbsensiController {
 
     public function __construct() {
         $this->model = new AbsensiModel();
-        session_start();
     }
 
     public function index() {

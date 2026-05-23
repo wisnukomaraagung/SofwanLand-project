@@ -1,0 +1,10 @@
+# Folder upload (jangan upload foto kuitansi/file dummy ke GitHub)
+public/uploads/
+
+# Folder spesifik OS
+.DS_Store
+Thumbs.db
+
+# File log XAMPP/PHP (jika ada)
+*.log
+error_log

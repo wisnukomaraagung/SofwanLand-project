@@ -6,7 +6,6 @@ class ProyekController {
 
     public function __construct() {
         $this->model = new ProyekModel();
-        session_start();
     }
 
     public function index() {
