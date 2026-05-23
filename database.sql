@@ -3,6 +3,18 @@
 -- =============================================
 
 
+-- Tabel Users
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin','manager','staff') DEFAULT 'staff',
+    status ENUM('aktif','nonaktif') DEFAULT 'aktif',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Tabel Proyek
 CREATE TABLE IF NOT EXISTS proyek (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -114,6 +126,11 @@ CREATE TABLE IF NOT EXISTS dokumentasi (
 -- =============================================
 -- DATA SAMPLE
 -- =============================================
+INSERT INTO users (nama, email, password, role, status) VALUES
+('Admin Kontraktor', 'admin@sofwan.com', 'admin123', 'admin', 'aktif'),
+('Manajer Proyek', 'manager@sofwan.com', 'manager123', 'manager', 'aktif'),
+('Staff Keuangan', 'staff@sofwan.com', 'staff123', 'staff', 'aktif');
+
 INSERT INTO proyek (nama_proyek, lokasi, tanggal_mulai, tanggal_selesai, nilai_kontrak, status, deskripsi) VALUES
 ('Pembangunan Gedung Perkantoran A', 'Jl. Sudirman No. 45, Jakarta', '2024-01-15', '2024-12-31', 2500000000, 'aktif', 'Pembangunan gedung 5 lantai untuk perkantoran'),
 ('Renovasi Jembatan Citarum', 'Kabupaten Bandung, Jawa Barat', '2024-03-01', '2024-09-30', 1800000000, 'aktif', 'Renovasi total jembatan sepanjang 120m'),

@@ -1,6 +1,8 @@
 <?php
 // public/index.php
 
+session_start();
+
 define('BASE_PATH', dirname(__DIR__));
 define('BASE_URL', (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . str_replace('/public/index.php', '', $_SERVER['SCRIPT_NAME']));
 
@@ -26,6 +28,7 @@ $action  = $_GET['action'] ?? 'index';
 $id      = $_GET['id'] ?? null;
 
 $routes = [
+    'login'     => 'LoginController',
     'dashboard' => 'DashboardController',
     'proyek'    => 'ProyekController',
     'barang'    => 'BarangController',
@@ -33,11 +36,21 @@ $routes = [
     'keuangan'  => 'KeuanganController',
 ];
 
+// Access control middleware
+$publicPages = ['login']; // Pages yang bisa diakses tanpa login
+$publicActions = ['authenticate', 'logout']; // Actions yang bisa diakses tanpa login
+if (!in_array($page, $publicPages) && !in_array($action, $publicActions) && !isset($_SESSION['user_id'])) {
+    header('Location: ' . BASE_URL . '/?page=login');
+    exit;
+}
+
 if (isset($routes[$page])) {
     $controllerClass = $routes[$page];
     $controller = new $controllerClass();
 
     if ($action === 'index')            $controller->index();
+    elseif ($action === 'authenticate') $controller->authenticate();
+    elseif ($action === 'logout')       $controller->logout();
     elseif ($action === 'detail')       $controller->detail((int)$id);
     elseif ($action === 'create')       $controller->create();
     elseif ($action === 'store')        $controller->store();
