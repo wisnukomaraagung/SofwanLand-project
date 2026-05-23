@@ -307,7 +307,7 @@
             <!-- Header -->
             <div class="login-header">
                 <div class="logo">
-                    <div class="logo-placeholder">S</div>
+                    <img src="<?= BASE_URL ?>/public/assets/logo_pt.png" alt="Sofwan Land Logo">
                 </div>
                 <div class="company-name">SOFWAN</div>
                 <div class="tagline">L A N D</div>
