@@ -129,12 +129,27 @@ class BarangController {
 
     // Barang Keluar
     public function storeKeluar() {
+        // Handle file upload (foto bukti)
+        $foto_bukti = null;
+        if (isset($_FILES['foto_bukti']) && $_FILES['foto_bukti']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = BASE_PATH . '/public/uploads/kuitansi/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $fileName = time() . '_keluar_' . basename($_FILES['foto_bukti']['name']);
+            $targetPath = $uploadDir . $fileName;
+            if (move_uploaded_file($_FILES['foto_bukti']['tmp_name'], $targetPath)) {
+                $foto_bukti = 'uploads/kuitansi/' . $fileName;
+            }
+        }
+
         $data = [
             'id_barang'  => intval($_POST['id_barang'] ?? 0),
             'id_proyek'  => intval($_POST['id_proyek'] ?? 0),
             'jumlah'     => intval($_POST['jumlah'] ?? 0),
             'tanggal'    => $_POST['tanggal'] ?? date('Y-m-d'),
             'keterangan' => trim($_POST['keterangan'] ?? ''),
+            'foto_bukti' => $foto_bukti,
         ];
         $this->model->storeKeluar($data);
         $_SESSION['flash'] = ['type'=>'success','message'=>'Barang keluar berhasil dicatat.'];

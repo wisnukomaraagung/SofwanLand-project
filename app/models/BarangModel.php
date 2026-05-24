@@ -122,10 +122,18 @@ class BarangModel {
 
     public function storeKeluar(array $data): bool {
         $pdo = $this->db;
+        
+        // Ensure foto_bukti column exists
+        try {
+            $pdo->query("SELECT foto_bukti FROM barang_keluar LIMIT 1");
+        } catch (Exception $e) {
+            $pdo->exec("ALTER TABLE barang_keluar ADD COLUMN foto_bukti VARCHAR(255) NULL");
+        }
+
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare("INSERT INTO barang_keluar (id_barang, id_proyek, jumlah, tanggal, keterangan) VALUES (?,?,?,?,?)");
-            $stmt->execute([$data['id_barang'], $data['id_proyek'], $data['jumlah'], $data['tanggal'], $data['keterangan']]);
+            $stmt = $pdo->prepare("INSERT INTO barang_keluar (id_barang, id_proyek, jumlah, tanggal, keterangan, foto_bukti) VALUES (?,?,?,?,?,?)");
+            $stmt->execute([$data['id_barang'], $data['id_proyek'], $data['jumlah'], $data['tanggal'], $data['keterangan'], $data['foto_bukti'] ?? null]);
             $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$data['jumlah'], $data['id_barang']]);
             $pdo->commit();
             return true;

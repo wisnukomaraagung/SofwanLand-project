@@ -34,7 +34,6 @@ $activeTab = $_GET['tab'] ?? 'masuk';
 <div class="pill-nav">
     <a href="?page=barang&tab=masuk" class="pill-btn <?= $activeTab === 'masuk' ? 'active' : '' ?>">↓ Barang Masuk</a>
     <a href="?page=barang&tab=keluar" class="pill-btn <?= $activeTab === 'keluar' ? 'active' : '' ?>">↑ Barang Keluar</a>
-    <a href="?page=keuangan" class="pill-btn">฿ Keuangan</a>
     <a href="?page=barang&tab=stok" class="pill-btn <?= $activeTab === 'stok' ? 'active' : '' ?>">≡ Master Barang</a>
 </div>
 
@@ -187,183 +186,7 @@ $activeTab = $_GET['tab'] ?? 'masuk';
     </div>
 </div>
 
-<!-- SCRIPTS FOR CAMERA AND OCR -->
-<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-<script>
-    let currentMode = 'upload';
-    let stream = null;
-
-    function switchUploadMode(mode) {
-        currentMode = mode;
-        document.getElementById('tab-upload').classList.toggle('active', mode === 'upload');
-        document.getElementById('tab-kamera').classList.toggle('active', mode === 'kamera');
-        
-        const ui = document.getElementById('upload-ui');
-        const video = document.getElementById('kamera-preview');
-        const img = document.getElementById('image-preview');
-        const dropzone = document.getElementById('dropzone');
-
-        if (mode === 'kamera') {
-            ui.style.display = 'none';
-            img.style.display = 'none';
-            video.style.display = 'block';
-            dropzone.onclick = takeSnapshot;
-            startCamera();
-        } else {
-            stopCamera();
-            video.style.display = 'none';
-            if (img.src && img.src !== window.location.href) {
-                img.style.display = 'block';
-                ui.style.display = 'none';
-            } else {
-                ui.style.display = 'block';
-                img.style.display = 'none';
-            }
-            dropzone.onclick = () => document.getElementById('file-input').click();
-        }
-    }
-
-    async function startCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            const video = document.getElementById('kamera-preview');
-            video.srcObject = stream;
-        } catch (err) {
-            alert('Tidak dapat mengakses kamera: ' + err.message);
-            switchUploadMode('upload');
-        }
-    }
-
-    function stopCamera() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            stream = null;
-        }
-    }
-
-    function takeSnapshot() {
-        const video = document.getElementById('kamera-preview');
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        document.getElementById('image-preview').src = dataUrl;
-        
-        // Convert data URL to Blob and assign to file input via DataTransfer
-        fetch(dataUrl)
-            .then(res => res.blob())
-            .then(blob => {
-                const file = new File([blob], "snapshot.jpg", { type: "image/jpeg" });
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                document.getElementById('file-input').files = dt.files;
-                
-                // Show preview and run OCR
-                switchUploadMode('upload');
-                runOCR(file);
-            });
-    }
-
-    function handleFileSelect(e) {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('image-preview').src = e.target.result;
-                document.getElementById('upload-ui').style.display = 'none';
-                document.getElementById('image-preview').style.display = 'block';
-                runOCR(file);
-            }
-            reader.readAsDataURL(file);
-        }
-    }
-
-    // Drag and drop handlers
-    const dropzone = document.getElementById('dropzone');
-    dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('dragover');
-    });
-    dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('dragover');
-    });
-    dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('dragover');
-        if (e.dataTransfer.files && e.dataTransfer.files[0] && currentMode === 'upload') {
-            document.getElementById('file-input').files = e.dataTransfer.files;
-            handleFileSelect({target: document.getElementById('file-input')});
-        }
-    });
-
-    async function runOCR(imageFile) {
-        const status = document.getElementById('ocr-status');
-        status.style.display = 'block';
-        status.innerText = 'Memindai kuitansi... Mohon tunggu.';
-        
-        try {
-            const worker = await Tesseract.createWorker('ind');
-            const ret = await worker.recognize(imageFile);
-            const text = ret.data.text;
-            console.log('OCR Result:', text);
-            await worker.terminate();
-            
-            status.style.color = '#27ae60';
-            status.innerText = 'Pemindaian selesai. Memproses data...';
-            
-            parseReceiptText(text);
-            
-            setTimeout(() => { status.style.display = 'none'; status.style.color = '#b8860b'; }, 3000);
-        } catch (err) {
-            console.error(err);
-            status.style.color = '#c0392b';
-            status.innerText = 'Gagal memindai kuitansi.';
-        }
-    }
-
-    function parseReceiptText(text) {
-        // Simple regex heuristics for receipt parsing
-        
-        // Try to find price (Rp XXX.XXX)
-        const priceMatch = text.match(/(?:Rp|Total)\s*[.:]?\s*(\d{1,3}(?:[.,]\d{3})*)/i);
-        if (priceMatch) {
-            const price = priceMatch[1].replace(/[^0-9]/g, '');
-            document.getElementById('harga_satuan').value = price;
-        }
-
-        // Try to find supplier (usually the first line)
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-        if (lines.length > 0) {
-            // Assume the first significant line is the store name if it doesn't contain numbers
-            if (!/\d/.test(lines[0]) && document.getElementById('supplier').value === '') {
-                document.getElementById('supplier').value = lines[0];
-            }
-            
-            // Put the rest in keterangan just in case
-            document.getElementById('keterangan').value = lines.slice(0, 3).join('\n');
-        }
-        
-        // Let the user know they need to verify
-        alert('Data berhasil dipindai. Harap periksa dan lengkapi sisa kolom yang kosong.');
-    }
-
-    function syncBarangId(input) {
-        const datalist = document.getElementById('barang-list');
-        const options = datalist.options;
-        const hiddenInput = document.getElementById('id_barang');
-        
-        hiddenInput.value = 0; // Default: new item
-        
-        for (let i = 0; i < options.length; i++) {
-            if (options[i].value === input.value) {
-                hiddenInput.value = options[i].getAttribute('data-id');
-                break;
-            }
-        }
-    }
-</script>
+<!-- SCRIPTS FOR CAMERA AND OCR MOVED TO BOTTOM -->
 
 <?php elseif ($activeTab === 'stok'): ?>
 <!-- STOK BARANG (Master Data) -->
@@ -409,7 +232,32 @@ $activeTab = $_GET['tab'] ?? 'masuk';
     <div class="card">
         <div class="card-header"><span class="card-title">↑ Input Barang Keluar</span></div>
         <div class="card-body">
-            <form method="POST" action="?page=barang&action=storeKeluar">
+            <div class="toggle-tabs">
+                <div class="toggle-tab active" id="tab-upload" onclick="switchUploadMode('upload')">📁 UPLOAD</div>
+                <div class="toggle-tab" id="tab-kamera" onclick="switchUploadMode('kamera')">📷 KAMERA</div>
+            </div>
+
+            <form method="POST" action="?page=barang&action=storeKeluar" enctype="multipart/form-data" id="form-keluar">
+                
+                <!-- UPLOAD/CAMERA AREA -->
+                <div class="dropzone-area" id="dropzone" onclick="document.getElementById('file-input').click()">
+                    <input type="file" name="foto_bukti" id="file-input" style="display:none" accept="image/*" onchange="handleFileSelect(event)">
+                    
+                    <div id="upload-ui">
+                        <div class="dropzone-icon">📄</div>
+                        <div class="dropzone-text">Klik atau drag foto bukti (opsional)</div>
+                        <div class="dropzone-subtext">JPG, PNG, HEIC — Maks 10MB</div>
+                    </div>
+                    
+                    <video id="kamera-preview" class="video-preview" autoplay playsinline></video>
+                    <img id="image-preview" class="image-preview">
+                </div>
+
+                <!-- SCAN RESULT INDICATOR -->
+                <div id="ocr-status" style="font-size:12px; color:#b8860b; text-align:center; margin-bottom:16px; display:none;">
+                    Memindai gambar... Mohon tunggu.
+                </div>
+
                 <div class="form-grid">
                     <div class="form-group form-full">
                         <label>Barang *</label>
@@ -450,10 +298,10 @@ $activeTab = $_GET['tab'] ?? 'masuk';
         <div class="card-header"><span class="card-title">Riwayat Keluar</span></div>
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Tanggal</th><th>Barang</th><th>Proyek</th><th class="text-right">Jumlah</th></tr></thead>
+                <thead><tr><th>Tanggal</th><th>Barang</th><th>Proyek</th><th class="text-right">Jumlah</th><th>Keterangan</th></tr></thead>
                 <tbody>
                     <?php if (empty($keluarList)): ?>
-                    <tr><td colspan="4" class="text-center text-muted" style="padding:24px">Belum ada data</td></tr>
+                    <tr><td colspan="5" class="text-center text-muted" style="padding:24px">Belum ada data</td></tr>
                     <?php else: ?>
                     <?php foreach ($keluarList as $k): ?>
                     <tr>
@@ -461,6 +309,9 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                         <td><?= htmlspecialchars($k['nama_barang']) ?></td>
                         <td class="text-muted" style="font-size:12px"><?= htmlspecialchars($k['nama_proyek']) ?></td>
                         <td class="text-right"><?= number_format($k['jumlah']) ?> <?= $k['satuan'] ?></td>
+                        <td class="text-muted" style="font-size:12px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($k['keterangan'] ?? '') ?>">
+                            <?= htmlspecialchars($k['keterangan'] ?? '—') ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                     <?php endif; ?>
@@ -470,5 +321,192 @@ $activeTab = $_GET['tab'] ?? 'masuk';
     </div>
 </div>
 <?php endif; ?>
+
+<!-- SCRIPTS FOR CAMERA AND OCR -->
+<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+<script>
+    let currentMode = 'upload';
+    let stream = null;
+
+    function switchUploadMode(mode) {
+        currentMode = mode;
+        const tabUpload = document.getElementById('tab-upload');
+        const tabKamera = document.getElementById('tab-kamera');
+        if (tabUpload) tabUpload.classList.toggle('active', mode === 'upload');
+        if (tabKamera) tabKamera.classList.toggle('active', mode === 'kamera');
+        
+        const ui = document.getElementById('upload-ui');
+        const video = document.getElementById('kamera-preview');
+        const img = document.getElementById('image-preview');
+        const dropzone = document.getElementById('dropzone');
+        if (!dropzone) return;
+
+        if (mode === 'kamera') {
+            ui.style.display = 'none';
+            img.style.display = 'none';
+            video.style.display = 'block';
+            dropzone.onclick = takeSnapshot;
+            startCamera();
+        } else {
+            stopCamera();
+            video.style.display = 'none';
+            if (img.src && img.src !== window.location.href) {
+                img.style.display = 'block';
+                ui.style.display = 'none';
+            } else {
+                ui.style.display = 'block';
+                img.style.display = 'none';
+            }
+            dropzone.onclick = () => document.getElementById('file-input').click();
+        }
+    }
+
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            const video = document.getElementById('kamera-preview');
+            if (video) video.srcObject = stream;
+        } catch (err) {
+            alert('Tidak dapat mengakses kamera: ' + err.message);
+            switchUploadMode('upload');
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
+    function takeSnapshot() {
+        const video = document.getElementById('kamera-preview');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        document.getElementById('image-preview').src = dataUrl;
+        
+        fetch(dataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+                const file = new File([blob], "snapshot.jpg", { type: "image/jpeg" });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                document.getElementById('file-input').files = dt.files;
+                
+                switchUploadMode('upload');
+                runOCR(file);
+            });
+    }
+
+    function handleFileSelect(e) {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById('image-preview');
+                const uploadUi = document.getElementById('upload-ui');
+                if (imgPreview) {
+                    imgPreview.src = e.target.result;
+                    imgPreview.style.display = 'block';
+                }
+                if (uploadUi) uploadUi.style.display = 'none';
+                runOCR(file);
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    const dropzone = document.getElementById('dropzone');
+    if(dropzone) {
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files[0] && currentMode === 'upload') {
+                document.getElementById('file-input').files = e.dataTransfer.files;
+                handleFileSelect({target: document.getElementById('file-input')});
+            }
+        });
+    }
+
+    async function runOCR(imageFile) {
+        const status = document.getElementById('ocr-status');
+        if(!status) return;
+        status.style.display = 'block';
+        status.innerText = 'Memindai gambar... Mohon tunggu.';
+        
+        try {
+            const worker = await Tesseract.createWorker('ind');
+            const ret = await worker.recognize(imageFile);
+            const text = ret.data.text;
+            console.log('OCR Result:', text);
+            await worker.terminate();
+            
+            status.style.color = '#27ae60';
+            status.innerText = 'Pemindaian selesai. Memproses data...';
+            
+            parseReceiptText(text);
+            
+            setTimeout(() => { status.style.display = 'none'; status.style.color = '#b8860b'; }, 3000);
+        } catch (err) {
+            console.error(err);
+            status.style.color = '#c0392b';
+            status.innerText = 'Gagal memindai kuitansi/bukti.';
+        }
+    }
+
+    function parseReceiptText(text) {
+        const priceMatch = text.match(/(?:Rp|Total)\s*[.:]?\s*(\d{1,3}(?:[.,]\d{3})*)/i);
+        if (priceMatch) {
+            const price = priceMatch[1].replace(/[^0-9]/g, '');
+            const hargaSatuan = document.getElementById('harga_satuan');
+            if (hargaSatuan) {
+                hargaSatuan.value = price;
+            }
+        }
+
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+        if (lines.length > 0) {
+            const supplier = document.getElementById('supplier');
+            if (supplier && !/\d/.test(lines[0]) && supplier.value === '') {
+                supplier.value = lines[0];
+            }
+            
+            const keterangan = document.getElementById('keterangan');
+            if (keterangan) {
+                keterangan.value = lines.slice(0, 3).join('\n');
+            }
+        }
+        
+        alert('Data berhasil dipindai. Harap periksa dan lengkapi sisa kolom yang kosong.');
+    }
+
+    function syncBarangId(input) {
+        const datalist = document.getElementById('barang-list');
+        if (!datalist) return;
+        const options = datalist.options;
+        const hiddenInput = document.getElementById('id_barang');
+        if(!hiddenInput) return;
+        
+        hiddenInput.value = 0;
+        
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value === input.value) {
+                hiddenInput.value = options[i].getAttribute('data-id');
+                break;
+            }
+        }
+    }
+</script>
 
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>
