@@ -2,9 +2,11 @@
 
 class LoginController {
     public function index() {
+        require_once BASE_PATH . '/config/roles.php';
+
         // Jika sudah login, redirect ke dashboard
         if (isset($_SESSION['user_id'])) {
-            header('Location: ' . BASE_URL . '/?page=dashboard');
+            header('Location: ' . BASE_URL . '/public/index.php?page=dashboard');
             exit;
         }
 
@@ -40,6 +42,12 @@ class LoginController {
             $user = $stmt->fetch();
 
             if ($user && $password === $user['password']) {
+                if (!in_array($user['role'], ['admin', 'manager'], true)) {
+                    $_SESSION['error'] = 'Akun ini tidak memiliki akses ke sistem.';
+                    header('Location: ' . BASE_URL . '/public/index.php?page=login');
+                    exit;
+                }
+
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['nama'] = $user['nama'];
                 $_SESSION['email'] = $user['email'];
@@ -49,7 +57,7 @@ class LoginController {
                     setcookie('email', $email, time() + (86400 * 30), '/');
                 }
 
-                header('Location: ' . BASE_URL . '/?page=dashboard');
+                header('Location: ' . BASE_URL . '/public/index.php?page=dashboard');
                 exit;
             }
         } catch (Exception $e) {

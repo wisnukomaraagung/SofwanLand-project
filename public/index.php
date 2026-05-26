@@ -7,6 +7,7 @@ define('BASE_PATH', dirname(__DIR__));
 define('BASE_URL', (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . str_replace('/public/index.php', '', $_SERVER['SCRIPT_NAME']));
 
 require_once BASE_PATH . '/config/database.php';
+require_once BASE_PATH . '/config/roles.php';
 
 // Autoload models & controllers
 spl_autoload_register(function ($class) {
@@ -41,6 +42,13 @@ $publicPages = ['login']; // Pages yang bisa diakses tanpa login
 $publicActions = ['authenticate', 'logout']; // Actions yang bisa diakses tanpa login
 if (!in_array($page, $publicPages) && !in_array($action, $publicActions) && !isset($_SESSION['user_id'])) {
     header('Location: ' . BASE_URL . '/?page=login');
+    exit;
+}
+
+// Role-based access: admin (absensi, barang) | manager (proyek, keuangan)
+if (isset($_SESSION['user_id']) && !in_array($page, $publicPages) && !roleCanAccessPage($page)) {
+    $_SESSION['error'] = 'Anda tidak memiliki akses ke halaman tersebut.';
+    header('Location: ' . BASE_URL . '/public/index.php?page=dashboard');
     exit;
 }
 

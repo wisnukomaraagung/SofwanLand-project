@@ -65,6 +65,59 @@ class DashboardModel {
         return $this->db->query($sql)->fetchAll();
     }
 
+    public function getTotalKaryawan(): int {
+        return (int) $this->db->query("SELECT COUNT(*) FROM karyawan")->fetchColumn();
+    }
+
+    public function getTotalBarang(): int {
+        return (int) $this->db->query("SELECT COUNT(*) FROM barang")->fetchColumn();
+    }
+
+    public function getAbsensiBulanIni(): int {
+        return (int) $this->db->query("
+            SELECT COUNT(*) FROM absensi
+            WHERE YEAR(tanggal) = YEAR(CURDATE()) AND MONTH(tanggal) = MONTH(CURDATE())
+        ")->fetchColumn();
+    }
+
+    public function getBarangStokRendah(int $batas = 10): array {
+        $stmt = $this->db->prepare("
+            SELECT id, nama_barang, stok, satuan
+            FROM barang
+            WHERE stok <= ?
+            ORDER BY stok ASC
+            LIMIT 8
+        ");
+        $stmt->execute([$batas]);
+        return $stmt->fetchAll();
+    }
+
+    public function getAbsensiPerStatus(): array {
+        return $this->db->query("
+            SELECT status, COUNT(*) AS jumlah
+            FROM absensi
+            GROUP BY status
+        ")->fetchAll();
+    }
+
+    public function getRekapAbsensiProyek(): array {
+        return $this->db->query("
+            SELECT p.nama_proyek,
+                COUNT(DISTINCT a.id_karyawan) AS total_pekerja,
+                SUM(CASE WHEN a.status = 'hadir' THEN 1 ELSE 0 END) AS hadir,
+                SUM(CASE WHEN a.status = 'alpha' THEN 1 ELSE 0 END) AS alpha
+            FROM proyek p
+            LEFT JOIN absensi a ON a.id_proyek = p.id
+            GROUP BY p.id, p.nama_proyek
+            ORDER BY p.nama_proyek ASC
+            LIMIT 6
+        ")->fetchAll();
+    }
+
+    public function getProyekAktif(): int {
+        return (int) $this->db->query("SELECT COUNT(*) FROM proyek WHERE status = 'aktif'")->fetchColumn();
+    }
+
     public function getProgressPerProyek(): array {
         $sql = "
             SELECT

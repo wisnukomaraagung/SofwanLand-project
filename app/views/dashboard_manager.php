@@ -1,5 +1,9 @@
 <?php require BASE_PATH . '/app/views/layouts/header.php'; ?>
 
+<?php if (!empty($_SESSION['error'])): ?>
+<div class="alert alert-error"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
+<?php endif; ?>
+
 <!-- STAT CARDS -->
 <div class="stats-grid">
     <div class="stat-card">
@@ -9,22 +13,22 @@
         <div class="stat-icon">◫</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Total Pekerja</div>
-        <div class="stat-value"><?= $totalPekerja ?></div>
-        <div class="stat-trend">Karyawan tercatat di absensi</div>
-        <div class="stat-icon">◧</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Barang Keluar</div>
-        <div class="stat-value"><?= number_format($totalBarangKeluar) ?></div>
-        <div class="stat-trend">Total unit semua proyek</div>
-        <div class="stat-icon">◩</div>
+        <div class="stat-label">Proyek Aktif</div>
+        <div class="stat-value"><?= $proyekAktif ?></div>
+        <div class="stat-trend">Sedang berjalan</div>
+        <div class="stat-icon">◈</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Total Pengeluaran</div>
         <div class="stat-value small">Rp <?= number_format($totalBiaya / 1000000, 1) ?>M</div>
         <div class="stat-trend"><?= 'Rp ' . number_format($totalBiaya, 0, ',', '.') ?></div>
         <div class="stat-icon">◪</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Modul</div>
+        <div class="stat-value" style="font-size:1.25rem">Proyek &amp; Keuangan</div>
+        <div class="stat-trend">Pemantauan operasional</div>
+        <div class="stat-icon">◧</div>
     </div>
 </div>
 
@@ -109,7 +113,6 @@
 </div>
 
 <script>
-// ---- Chart: Biaya per Bulan ----
 (function() {
     const rawBiaya = <?= json_encode($biayaPerBulan) ?>;
     const labels = rawBiaya.map(r => {
@@ -156,7 +159,6 @@
     });
 })();
 
-// ---- Chart: Progress per Proyek ----
 (function() {
     const rawProg = <?= json_encode($progressProyek) ?>;
     const labels = rawProg.map(r => r.nama_proyek.length > 20 ? r.nama_proyek.substring(0,20)+'…' : r.nama_proyek);

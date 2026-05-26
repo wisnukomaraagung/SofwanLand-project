@@ -26,13 +26,7 @@
     <div class="navbar-menu" id="navMenu">
         <?php
         $currentPage = $_GET['page'] ?? 'dashboard';
-        $menuItems = [
-            'dashboard' => ['icon' => '◈', 'label' => 'Dashboard'],
-            'proyek'    => ['icon' => '◫', 'label' => 'Proyek'],
-            'barang'    => ['icon' => '◧', 'label' => 'Barang'],
-            'absensi'   => ['icon' => '◩', 'label' => 'Absensi'],
-            'keuangan'  => ['icon' => '◪', 'label' => 'Keuangan'],
-        ];
+        $menuItems = getMenuForRole();
         foreach ($menuItems as $key => $item):
             $isActive = ($currentPage === $key) ? 'active' : '';
         ?>
@@ -43,7 +37,14 @@
         <?php endforeach; ?>
 
         <div style="flex-grow: 1;"></div>
-        
+
+        <?php if (!empty($_SESSION['nama'])): ?>
+        <span class="nav-user-badge" title="<?= htmlspecialchars(getRoleLabel()) ?>">
+            <?= htmlspecialchars($_SESSION['nama']) ?>
+            <small>(<?= htmlspecialchars(getRoleLabel()) ?>)</small>
+        </span>
+        <?php endif; ?>
+
         <a href="<?= BASE_URL ?>/public/index.php?page=login&action=logout" class="nav-link" style="color: #c0392b; font-weight: 600;" onclick="return confirm('Apakah Anda yakin ingin logout?');">
             <span class="nav-icon">🚪</span>
             Logout

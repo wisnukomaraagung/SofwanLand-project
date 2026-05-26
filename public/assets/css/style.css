@@ -117,6 +117,18 @@ body {
     opacity: 0.7;
 }
 
+.nav-user-badge {
+    color: var(--gray-300);
+    font-size: 13px;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.nav-user-badge small {
+    color: var(--gray-500);
+    font-weight: 400;
+}
+
 .hamburger {
     display: none;
     flex-direction: column;
@@ -135,6 +147,19 @@ body {
     background: var(--white);
     border-radius: 2px;
     transition: all 0.3s ease;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.alert-error {
+    background: #fdecea;
+    color: #c0392b;
+    border: 1px solid #f5c6cb;
 }
 
 /* ============ MAIN CONTENT ============ */
