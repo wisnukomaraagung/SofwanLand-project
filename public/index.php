@@ -60,6 +60,8 @@ if (isset($routes[$page])) {
     elseif ($action === 'update')       $controller->update((int)$id);
     elseif ($action === 'delete')       $controller->delete((int)$id);
     elseif ($action === 'exportMasukExcel') $controller->exportMasukExcel();
+    elseif ($action === 'exportKeluarExcel') $controller->exportKeluarExcel();
+    elseif ($action === 'exportExcel')  $controller->exportExcel();
     elseif ($action === 'editMasuk')    $controller->editMasuk((int)$id);
     elseif ($action === 'updateMasuk')  $controller->updateMasuk((int)$id);
     elseif ($action === 'deleteMasuk')  $controller->deleteMasuk((int)$id);

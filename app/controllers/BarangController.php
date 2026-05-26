@@ -200,6 +200,41 @@ class BarangController {
         exit;
     }
 
+    public function exportKeluarExcel() {
+        $keluarList = $this->model->getKeluar();
+        
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Laporan_Barang_Keluar_" . date('Ymd') . ".xls\"");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+        
+        echo "<table border='1'>";
+        echo "<tr>";
+        echo "<th>No</th>";
+        echo "<th>Tanggal</th>";
+        echo "<th>Barang</th>";
+        echo "<th>Proyek</th>";
+        echo "<th>Jumlah</th>";
+        echo "<th>Satuan</th>";
+        echo "<th>Keterangan</th>";
+        echo "</tr>";
+        
+        $no = 1;
+        foreach ($keluarList as $k) {
+            echo "<tr>";
+            echo "<td>" . $no++ . "</td>";
+            echo "<td>" . $k['tanggal'] . "</td>";
+            echo "<td>" . htmlspecialchars($k['nama_barang']) . "</td>";
+            echo "<td>" . htmlspecialchars($k['nama_proyek']) . "</td>";
+            echo "<td>" . $k['jumlah'] . "</td>";
+            echo "<td>" . htmlspecialchars($k['satuan']) . "</td>";
+            echo "<td>" . htmlspecialchars($k['keterangan'] ?? '-') . "</td>";
+            echo "</tr>";
+        }
+        echo "</table>";
+        exit;
+    }
+
     public function editMasuk(int $id) {
         $masuk = $this->model->getMasukById($id);
         if (!$masuk) { header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=masuk'); exit; }
@@ -212,14 +247,34 @@ class BarangController {
     }
 
     public function updateMasuk(int $id) {
+        $oldMasuk = $this->model->getMasukById($id);
+        $foto_kuitansi = $oldMasuk['foto_kuitansi'] ?? null;
+
+        if (isset($_FILES['foto_kuitansi']) && $_FILES['foto_kuitansi']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = BASE_PATH . '/public/uploads/kuitansi/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $fileName = time() . '_' . basename($_FILES['foto_kuitansi']['name']);
+            $targetPath = $uploadDir . $fileName;
+            if (move_uploaded_file($_FILES['foto_kuitansi']['tmp_name'], $targetPath)) {
+                // Delete old file if exists
+                if ($foto_kuitansi && file_exists(BASE_PATH . '/public/' . $foto_kuitansi)) {
+                    @unlink(BASE_PATH . '/public/' . $foto_kuitansi);
+                }
+                $foto_kuitansi = 'uploads/kuitansi/' . $fileName;
+            }
+        }
+
         $data = [
-            'id_barang'    => intval($_POST['id_barang'] ?? 0),
-            'jumlah'       => intval($_POST['jumlah'] ?? 0),
-            'tanggal'      => $_POST['tanggal'] ?? date('Y-m-d'),
-            'harga_satuan' => floatval($_POST['harga_satuan'] ?? 0),
-            'supplier'     => trim($_POST['supplier'] ?? ''),
-            'no_kuitansi'  => trim($_POST['no_kuitansi'] ?? ''),
-            'keterangan'   => trim($_POST['keterangan'] ?? ''),
+            'id_barang'     => intval($_POST['id_barang'] ?? 0),
+            'jumlah'        => intval($_POST['jumlah'] ?? 0),
+            'tanggal'       => $_POST['tanggal'] ?? date('Y-m-d'),
+            'harga_satuan'  => floatval($_POST['harga_satuan'] ?? 0),
+            'supplier'      => trim($_POST['supplier'] ?? ''),
+            'no_kuitansi'   => trim($_POST['no_kuitansi'] ?? ''),
+            'foto_kuitansi' => $foto_kuitansi,
+            'keterangan'    => trim($_POST['keterangan'] ?? ''),
         ];
         
         $this->model->updateMasuk($id, $data);

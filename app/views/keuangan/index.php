@@ -88,7 +88,10 @@
 
 <!-- DAFTAR TRANSAKSI -->
 <div class="card mt-4">
-    <div class="card-header"><span class="card-title">Daftar Transaksi</span></div>
+    <div class="card-header">
+        <span class="card-title">Daftar Transaksi</span>
+        <a href="?page=keuangan&action=exportExcel" class="btn btn-secondary btn-sm" style="text-decoration:none;">↓ Excel</a>
+    </div>
     <div class="table-wrap">
         <table>
             <thead>

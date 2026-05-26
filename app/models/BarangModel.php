@@ -158,11 +158,11 @@ class BarangModel {
                 $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$old['jumlah'], $old['id_barang']]);
                 $pdo->prepare("UPDATE barang SET stok = stok + ? WHERE id = ?")->execute([$data['jumlah'], $data['id_barang']]);
                 
-                $stmt = $pdo->prepare("UPDATE barang_masuk SET id_barang=?, jumlah=?, tanggal=?, harga_satuan=?, supplier=?, no_kuitansi=?, keterangan=? WHERE id=?");
+                $stmt = $pdo->prepare("UPDATE barang_masuk SET id_barang=?, jumlah=?, tanggal=?, harga_satuan=?, supplier=?, no_kuitansi=?, foto_kuitansi=?, keterangan=? WHERE id=?");
                 $stmt->execute([
                     $data['id_barang'], $data['jumlah'], $data['tanggal'], 
                     $data['harga_satuan'] ?? 0, $data['supplier'] ?? null, 
-                    $data['no_kuitansi'] ?? null, $data['keterangan'] ?? null,
+                    $data['no_kuitansi'] ?? null, $data['foto_kuitansi'] ?? null, $data['keterangan'] ?? null,
                     $id
                 ]);
             }
@@ -178,7 +178,9 @@ class BarangModel {
         $pdo = $this->db;
         $pdo->beginTransaction();
         try {
-            $masuk = $pdo->query("SELECT id_barang, jumlah FROM barang_masuk WHERE id = $id")->fetch();
+            $stmt = $pdo->prepare("SELECT id_barang, jumlah FROM barang_masuk WHERE id = ?");
+            $stmt->execute([$id]);
+            $masuk = $stmt->fetch();
             if ($masuk) {
                 $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$masuk['jumlah'], $masuk['id_barang']]);
                 $pdo->prepare("DELETE FROM barang_masuk WHERE id = ?")->execute([$id]);

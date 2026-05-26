@@ -110,10 +110,7 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                         <input type="text" id="supplier" name="supplier" placeholder="Toko Bangunan...">
                     </div>
 
-                    <div class="form-group form-full">
-                        <label>No. Kuitansi</label>
-                        <input type="text" id="no_kuitansi" name="no_kuitansi" placeholder="INV-001 (opsional)">
-                    </div>
+
 
                     <div class="form-group form-full">
                         <label>Keterangan</label>
@@ -158,7 +155,12 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                     <tr>
                         <td class="text-muted"><?= str_pad($i + 1, 2, '0', STR_PAD_LEFT) ?></td>
                         <td class="text-muted" style="font-size:13px"><?= date('d M Y', strtotime($m['tanggal'])) ?></td>
-                        <td><strong><?= htmlspecialchars($m['nama_barang']) ?></strong></td>
+                        <td>
+                            <strong><?= htmlspecialchars($m['nama_barang']) ?></strong>
+                            <?php if (!empty($m['foto_kuitansi'])): ?>
+                                <a href="<?= BASE_URL ?>/public/<?= htmlspecialchars($m['foto_kuitansi']) ?>" target="_blank" title="Lihat Kuitansi" style="text-decoration:none; margin-left:6px; font-size:14px;">🖼️</a>
+                            <?php endif; ?>
+                        </td>
                         <td><strong><?= number_format($m['jumlah']) ?></strong> <span class="text-muted"><?= $m['satuan'] ?></span></td>
                         <?php if (isset($m['harga_satuan']) && $m['harga_satuan'] > 0): ?>
                             <td class="text-muted">Rp <?= number_format($m['harga_satuan'],0,',','.') ?></td>
@@ -295,7 +297,10 @@ $activeTab = $_GET['tab'] ?? 'masuk';
         </div>
     </div>
     <div class="card">
-        <div class="card-header"><span class="card-title">Riwayat Keluar</span></div>
+        <div class="card-header">
+            <span class="card-title">Riwayat Keluar</span>
+            <a href="?page=barang&action=exportKeluarExcel" class="btn btn-secondary btn-sm" style="text-decoration:none;">↓ Excel</a>
+        </div>
         <div class="table-wrap">
             <table>
                 <thead><tr><th>Tanggal</th><th>Barang</th><th>Proyek</th><th class="text-right">Jumlah</th><th>Keterangan</th></tr></thead>
