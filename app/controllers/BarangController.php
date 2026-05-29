@@ -349,4 +349,59 @@ class BarangController {
         $_SESSION['flash'] = ['type'=>'success','message'=>'Riwayat barang keluar berhasil dihapus.'];
         header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=keluar'); exit;
     }
+
+    public function viewBukti() {
+        $tab = $_GET['tab'] ?? 'masuk';
+        if (!in_array($tab, ['masuk', 'keluar', 'stok'], true)) {
+            $tab = 'masuk';
+        }
+
+        $relativePath = $this->resolveKuitansiPath($_GET['file'] ?? '');
+        if (!$relativePath) {
+            $_SESSION['flash'] = ['type' => 'error', 'message' => 'File bukti tidak valid.'];
+            header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=' . urlencode($tab));
+            exit;
+        }
+
+        $fullPath = BASE_PATH . '/public/' . $relativePath;
+        if (!is_file($fullPath)) {
+            $_SESSION['flash'] = ['type' => 'error', 'message' => 'File bukti tidak ditemukan.'];
+            header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=' . urlencode($tab));
+            exit;
+        }
+
+        $backUrl = BASE_URL . '/public/index.php?page=barang&tab=' . urlencode($tab);
+        if (!empty($_GET['return'])) {
+            $return = $_GET['return'];
+            if (strpos($return, BASE_URL) === 0) {
+                $backUrl = $return;
+            }
+        }
+        $pageTitle = $tab === 'keluar' ? 'Bukti Barang Keluar' : 'Bukti Kuitansi';
+        $pageSubtitle = basename($relativePath);
+        $pageAction = '<a href="' . htmlspecialchars($backUrl) . '" class="btn btn-secondary">← Kembali</a>';
+        $imageUrl = BASE_URL . '/public/' . $relativePath;
+
+        require BASE_PATH . '/app/views/barang/view_bukti.php';
+    }
+
+    public static function buktiViewUrl(string $relativePath, string $tab = 'masuk', ?string $returnUrl = null): string {
+        $url = BASE_URL . '/public/index.php?page=barang&action=viewBukti&tab='
+            . rawurlencode($tab) . '&file=' . rawurlencode($relativePath);
+        if ($returnUrl !== null && $returnUrl !== '') {
+            $url .= '&return=' . rawurlencode($returnUrl);
+        }
+        return $url;
+    }
+
+    private function resolveKuitansiPath(string $file): ?string {
+        $file = str_replace('\\', '/', trim($file));
+        if ($file === '' || strpos($file, '..') !== false) {
+            return null;
+        }
+        if (!preg_match('#^uploads/kuitansi/[^/\\\\]+\\.(png|jpe?g|gif|webp)$#i', $file)) {
+            return null;
+        }
+        return $file;
+    }
 }

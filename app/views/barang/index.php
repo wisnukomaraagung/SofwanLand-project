@@ -60,8 +60,8 @@ $activeTab = $_GET['tab'] ?? 'masuk';
             <form method="POST" action="?page=barang&action=storeMasuk" enctype="multipart/form-data" id="form-masuk">
                 
                 <!-- UPLOAD/CAMERA AREA -->
-                <div class="dropzone-area" id="dropzone" onclick="document.getElementById('file-input').click()">
-                    <input type="file" name="foto_kuitansi" id="file-input" style="display:none" accept="image/*" onchange="handleFileSelect(event)">
+                <div class="dropzone-area" id="dropzone" role="button" tabindex="0">
+                    <input type="file" name="foto_kuitansi" id="file-input" style="display:none" accept="image/*">
                     
                     <div id="upload-ui">
                         <div class="dropzone-icon">📄</div>
@@ -73,9 +73,8 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                     <img id="image-preview" class="image-preview">
                 </div>
                 
-                <!-- SCAN RESULT INDICATOR -->
-                <div id="ocr-status" style="font-size:12px; color:#b8860b; text-align:center; margin-bottom:16px; display:none;">
-                    Memindai kuitansi... Mohon tunggu.
+                <div id="ocr-status" style="font-size:12px; color:#b8860b; text-align:center; margin-bottom:16px; display:none;" aria-live="polite">
+                    Siap memindai kuitansi.
                 </div>
 
                 <div class="form-grid">
@@ -167,7 +166,7 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                         <td>
                             <strong><?= htmlspecialchars($m['nama_barang']) ?></strong>
                             <?php if (!empty($m['foto_kuitansi'])): ?>
-                                <a href="<?= BASE_URL ?>/public/<?= htmlspecialchars($m['foto_kuitansi']) ?>" target="_blank" title="Lihat Kuitansi" style="text-decoration:none; margin-left:6px; font-size:14px;">🖼️</a>
+                                <a href="<?= htmlspecialchars(BarangController::buktiViewUrl($m['foto_kuitansi'], 'masuk')) ?>" title="Lihat Kuitansi" style="text-decoration:none; margin-left:6px; font-size:14px;">🖼️</a>
                             <?php endif; ?>
                         </td>
                         <td><strong><?= number_format($m['jumlah']) ?></strong> <span class="text-muted"><?= $m['satuan'] ?></span></td>
@@ -260,8 +259,8 @@ $activeTab = $_GET['tab'] ?? 'masuk';
             <form method="POST" action="?page=barang&action=storeKeluar" enctype="multipart/form-data" id="form-keluar">
                 
                 <!-- UPLOAD/CAMERA AREA -->
-                <div class="dropzone-area" id="dropzone" onclick="document.getElementById('file-input').click()">
-                    <input type="file" name="foto_bukti" id="file-input" style="display:none" accept="image/*" onchange="handleFileSelect(event)">
+                <div class="dropzone-area" id="dropzone" role="button" tabindex="0">
+                    <input type="file" name="foto_bukti" id="file-input" style="display:none" accept="image/*">
                     
                     <div id="upload-ui">
                         <div class="dropzone-icon">📄</div>
@@ -271,11 +270,6 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                     
                     <video id="kamera-preview" class="video-preview" autoplay playsinline></video>
                     <img id="image-preview" class="image-preview">
-                </div>
-
-                <!-- SCAN RESULT INDICATOR -->
-                <div id="ocr-status" style="font-size:12px; color:#b8860b; text-align:center; margin-bottom:16px; display:none;">
-                    Memindai gambar... Mohon tunggu.
                 </div>
 
                 <div class="form-grid">
@@ -365,191 +359,20 @@ $activeTab = $_GET['tab'] ?? 'masuk';
 </div>
 <?php endif; ?>
 
-<!-- SCRIPTS FOR CAMERA AND OCR -->
-<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+<?php if ($canManageBarang && in_array($activeTab, ['masuk', 'keluar'], true)): ?>
+<?php if ($activeTab === 'masuk'): ?>
+<script>window.BARANG_OCR_ASSETS = <?= json_encode(rtrim(BASE_URL, '/') . '/public/assets/tesseract') ?>;</script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<?php endif; ?>
+<script src="<?= BASE_URL ?>/public/assets/js/barang-kuitansi.js"></script>
 <script>
-    let currentMode = 'upload';
-    let stream = null;
-
-    function switchUploadMode(mode) {
-        currentMode = mode;
-        const tabUpload = document.getElementById('tab-upload');
-        const tabKamera = document.getElementById('tab-kamera');
-        if (tabUpload) tabUpload.classList.toggle('active', mode === 'upload');
-        if (tabKamera) tabKamera.classList.toggle('active', mode === 'kamera');
-        
-        const ui = document.getElementById('upload-ui');
-        const video = document.getElementById('kamera-preview');
-        const img = document.getElementById('image-preview');
-        const dropzone = document.getElementById('dropzone');
-        if (!dropzone) return;
-
-        if (mode === 'kamera') {
-            ui.style.display = 'none';
-            img.style.display = 'none';
-            video.style.display = 'block';
-            dropzone.onclick = takeSnapshot;
-            startCamera();
-        } else {
-            stopCamera();
-            video.style.display = 'none';
-            if (img.src && img.src !== window.location.href) {
-                img.style.display = 'block';
-                ui.style.display = 'none';
-            } else {
-                ui.style.display = 'block';
-                img.style.display = 'none';
-            }
-            dropzone.onclick = () => document.getElementById('file-input').click();
-        }
-    }
-
-    async function startCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            const video = document.getElementById('kamera-preview');
-            if (video) video.srcObject = stream;
-        } catch (err) {
-            alert('Tidak dapat mengakses kamera: ' + err.message);
-            switchUploadMode('upload');
-        }
-    }
-
-    function stopCamera() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            stream = null;
-        }
-    }
-
-    function takeSnapshot() {
-        const video = document.getElementById('kamera-preview');
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        document.getElementById('image-preview').src = dataUrl;
-        
-        fetch(dataUrl)
-            .then(res => res.blob())
-            .then(blob => {
-                const file = new File([blob], "snapshot.jpg", { type: "image/jpeg" });
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                document.getElementById('file-input').files = dt.files;
-                
-                switchUploadMode('upload');
-                runOCR(file);
-            });
-    }
-
-    function handleFileSelect(e) {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgPreview = document.getElementById('image-preview');
-                const uploadUi = document.getElementById('upload-ui');
-                if (imgPreview) {
-                    imgPreview.src = e.target.result;
-                    imgPreview.style.display = 'block';
-                }
-                if (uploadUi) uploadUi.style.display = 'none';
-                runOCR(file);
-            }
-            reader.readAsDataURL(file);
-        }
-    }
-
-    const dropzone = document.getElementById('dropzone');
-    if(dropzone) {
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-        });
-        dropzone.addEventListener('dragleave', () => {
-            dropzone.classList.remove('dragover');
-        });
-        dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-            if (e.dataTransfer.files && e.dataTransfer.files[0] && currentMode === 'upload') {
-                document.getElementById('file-input').files = e.dataTransfer.files;
-                handleFileSelect({target: document.getElementById('file-input')});
-            }
-        });
-    }
-
-    async function runOCR(imageFile) {
-        const status = document.getElementById('ocr-status');
-        if(!status) return;
-        status.style.display = 'block';
-        status.innerText = 'Memindai gambar... Mohon tunggu.';
-        
-        try {
-            const worker = await Tesseract.createWorker('ind');
-            const ret = await worker.recognize(imageFile);
-            const text = ret.data.text;
-            console.log('OCR Result:', text);
-            await worker.terminate();
-            
-            status.style.color = '#27ae60';
-            status.innerText = 'Pemindaian selesai. Memproses data...';
-            
-            parseReceiptText(text);
-            
-            setTimeout(() => { status.style.display = 'none'; status.style.color = '#b8860b'; }, 3000);
-        } catch (err) {
-            console.error(err);
-            status.style.color = '#c0392b';
-            status.innerText = 'Gagal memindai kuitansi/bukti.';
-        }
-    }
-
-    function parseReceiptText(text) {
-        const priceMatch = text.match(/(?:Rp|Total)\s*[.:]?\s*(\d{1,3}(?:[.,]\d{3})*)/i);
-        if (priceMatch) {
-            const price = priceMatch[1].replace(/[^0-9]/g, '');
-            const hargaSatuan = document.getElementById('harga_satuan');
-            if (hargaSatuan) {
-                hargaSatuan.value = price;
-            }
-        }
-
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-        if (lines.length > 0) {
-            const supplier = document.getElementById('supplier');
-            if (supplier && !/\d/.test(lines[0]) && supplier.value === '') {
-                supplier.value = lines[0];
-            }
-            
-            const keterangan = document.getElementById('keterangan');
-            if (keterangan) {
-                keterangan.value = lines.slice(0, 3).join('\n');
-            }
-        }
-        
-        alert('Data berhasil dipindai. Harap periksa dan lengkapi sisa kolom yang kosong.');
-    }
-
-    function syncBarangId(input) {
-        const datalist = document.getElementById('barang-list');
-        if (!datalist) return;
-        const options = datalist.options;
-        const hiddenInput = document.getElementById('id_barang');
-        if(!hiddenInput) return;
-        
-        hiddenInput.value = 0;
-        
-        for (let i = 0; i < options.length; i++) {
-            if (options[i].value === input.value) {
-                hiddenInput.value = options[i].getAttribute('data-id');
-                break;
-            }
-        }
-    }
+document.addEventListener('DOMContentLoaded', function () {
+    BarangKuitansi.init({
+        ocrEnabled: <?= $activeTab === 'masuk' ? 'true' : 'false' ?>,
+        assetBase: window.BARANG_OCR_ASSETS || ''
+    });
+});
 </script>
+<?php endif; ?>
 
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>
