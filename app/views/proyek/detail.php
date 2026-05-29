@@ -145,6 +145,7 @@
     background:#e2e8f0;
     border-radius:10px;
     overflow:hidden;
+    margin-top:5px;
 }
 
 .work-progress span{
@@ -160,6 +161,131 @@
     color:#2563eb;
     font-weight:600;
     font-size:13px;
+}
+
+.tab-content{
+    display:none;
+}
+
+.tab-content.active{
+    display:block;
+}
+
+.custom-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.custom-table th,
+.custom-table td{
+    padding:14px;
+    border-bottom:1px solid #e2e8f0;
+    text-align:left;
+}
+
+.job-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+}
+
+.job-card{
+    border:1px solid #e2e8f0;
+    border-radius:18px;
+    padding:20px;
+    background:#fff;
+}
+
+.job-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.job-status{
+    padding:6px 12px;
+    border-radius:10px;
+    font-size:12px;
+    font-weight:600;
+}
+
+.selesai{
+    background:#dcfce7;
+    color:#16a34a;
+}
+
+.proses{
+    background:#fef9c3;
+    color:#ca8a04;
+}
+
+.job-progress{
+    width:100%;
+    height:10px;
+    background:#e2e8f0;
+    border-radius:10px;
+    overflow:hidden;
+    margin:15px 0;
+}
+
+.job-progress span{
+    display:block;
+    height:100%;
+    background:#2563eb;
+}
+
+.gallery-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+}
+
+.gallery-card{
+    border-radius:20px;
+    overflow:hidden;
+    border:1px solid #e2e8f0;
+    background:#fff;
+}
+
+.gallery-card img{
+    width:100%;
+    height:220px;
+    object-fit:cover;
+}
+
+.gallery-body{
+    padding:18px;
+}
+
+.tab{
+    padding-bottom:14px;
+    cursor:pointer;
+    font-weight:600;
+    color:#64748b;
+    transition:.2s;
+}
+
+.tab:hover{
+    color:#2563eb;
+}
+
+@media(max-width:768px){
+
+    .project-top{
+        flex-direction:column;
+        gap:20px;
+    }
+
+    .detail-grid{
+        grid-template-columns:1fr;
+    }
+
+    .tabs{
+        overflow-x:auto;
+        white-space:nowrap;
+    }
+
 }
 
 </style>
@@ -225,74 +351,216 @@
 
     <!-- TAB -->
     <div class="tabs">
-        <div class="tab active">Grafik Progress</div>
-        <div class="tab">Pengeluaran</div>
-        <div class="tab">Rincian Pekerjaan</div>
-        <div class="tab">Dokumentasi</div>
-    </div>
-
-    <!-- CONTENT -->
-    <div class="detail-grid">
-
-        <!-- GRAFIK -->
-        <div class="chart-card">
-
-            <div class="chart-title">
-                Grafik Progress Proyek
-            </div>
-
-            <div style="height:320px">
-                <canvas id="progressChart"></canvas>
-            </div>
-
+        <div class="tab active" data-tab="grafik">
+            Grafik Progress
         </div>
 
-        <!-- RINCIAN -->
-        <div class="chart-card">
+        <div class="tab" data-tab="pengeluaran">
+            Pengeluaran
+        </div>
 
-            <div class="chart-title">
-                Progress Pekerjaan
+        <div class="tab" data-tab="rincian">
+            Rincian Pekerjaan
+        </div>
+
+        <div class="tab" data-tab="dokumentasi">
+            Dokumentasi
+        </div>
+    </div>
+
+
+    <!-- TAB GRAFIK -->
+    <div class="tab-content active" id="grafik">
+
+        <div class="detail-grid">
+
+            <div class="chart-card">
+
+                <div class="chart-title">
+                    Grafik Progress Proyek
+                </div>
+
+                <div style="height:320px">
+                    <canvas id="progressChart"></canvas>
+                </div>
+
             </div>
 
-            <div class="work-list">
+            <div class="chart-card">
 
-                <div class="work-item">
-                    <div class="work-left">
-                        <i class="ri-hammer-line"></i>
-                        Pondasi
-                    </div>
+                <div class="chart-title">
+                    Progress Pekerjaan
+                </div>
 
-                    <div>
+                <div class="work-list">
+
+                    <div class="work-item">
+                        <div class="work-left">
+                            <i class="ri-hammer-line"></i>
+                            Pondasi
+                        </div>
+
                         <div class="work-progress">
                             <span style="width:100%"></span>
                         </div>
                     </div>
-                </div>
 
-                <div class="work-item">
-                    <div class="work-left">
-                        <i class="ri-building-line"></i>
-                        Struktur
-                    </div>
+                    <div class="work-item">
+                        <div class="work-left">
+                            <i class="ri-building-line"></i>
+                            Struktur
+                        </div>
 
-                    <div>
                         <div class="work-progress">
                             <span style="width:80%"></span>
                         </div>
                     </div>
-                </div>
 
-                <div class="work-item">
-                    <div class="work-left">
-                        <i class="ri-home-gear-line"></i>
-                        Finishing
-                    </div>
+                    <div class="work-item">
+                        <div class="work-left">
+                            <i class="ri-home-gear-line"></i>
+                            Finishing
+                        </div>
 
-                    <div>
                         <div class="work-progress">
                             <span style="width:40%"></span>
                         </div>
                     </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TAB PENGELUARAN -->
+    <div class="tab-content" id="pengeluaran">
+
+        <div class="chart-card">
+
+            <div class="chart-title">
+                Data Pengeluaran
+            </div>
+
+            <table class="custom-table">
+
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Kategori</th>
+                        <th>Keterangan</th>
+                        <th>Nominal</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>12 Mei 2026</td>
+                        <td>Material</td>
+                        <td>Pembelian Semen</td>
+                        <td>Rp 12.000.000</td>
+                    </tr>
+
+                    <tr>
+                        <td>15 Mei 2026</td>
+                        <td>Upah</td>
+                        <td>Pekerja Pondasi</td>
+                        <td>Rp 8.000.000</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <!-- TAB RINCIAN -->
+    <div class="tab-content" id="rincian">
+
+        <div class="job-grid">
+
+            <div class="job-card">
+
+                <div class="job-head">
+                    <h3>Pondasi</h3>
+                    <span class="job-status selesai">Selesai</span>
+                </div>
+
+                <p>
+                    Pengerjaan pondasi utama bangunan proyek.
+                </p>
+
+                <div class="job-progress">
+                    <span style="width:100%"></span>
+                </div>
+
+                <small>Estimasi : 7 Hari</small>
+
+            </div>
+
+            <div class="job-card">
+
+                <div class="job-head">
+                    <h3>Struktur Beton</h3>
+                    <span class="job-status proses">Berjalan</span>
+                </div>
+
+                <p>
+                    Pengerjaan struktur dan pengecoran beton.
+                </p>
+
+                <div class="job-progress">
+                    <span style="width:65%"></span>
+                </div>
+
+                <small>Estimasi : 14 Hari</small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TAB DOKUMENTASI -->
+    <div class="tab-content" id="dokumentasi">
+
+        <div class="gallery-grid">
+
+            <div class="gallery-card">
+
+                <img src="<img src="/uploads/proyek/pondasi.jpg">
+
+                <div class="gallery-body">
+
+                    <h4>Pondasi Proyek</h4>
+
+                    <small>12 Mei 2026</small>
+
+                    <div class="job-progress">
+                        <span style="width:35%"></span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="gallery-card">
+
+                <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=1200&auto=format&fit=crop">
+
+                <div class="gallery-body">
+
+                    <h4>Struktur Bangunan</h4>
+
+                    <small>20 Mei 2026</small>
+
+                    <div class="job-progress">
+                        <span style="width:70%"></span>
+                    </div>
+
                 </div>
 
             </div>
@@ -352,6 +620,32 @@ new Chart(ctx, {
             }
         }
     }
+});
+
+</script>
+
+<script>
+
+const tabs = document.querySelectorAll('.tab');
+const contents = document.querySelectorAll('.tab-content');
+
+tabs.forEach(tab => {
+
+    tab.addEventListener('click', () => {
+
+        tabs.forEach(item => item.classList.remove('active'));
+        contents.forEach(item => item.classList.remove('active'));
+
+        tab.classList.add('active');
+
+        const target = tab.dataset.tab;
+
+        document
+            .getElementById(target)
+            .classList.add('active');
+
+    });
+
 });
 
 </script>
