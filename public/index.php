@@ -97,6 +97,9 @@ if (isset($routes[$page])) {
     elseif ($action === 'editMasuk')    $controller->editMasuk((int)$id);
     elseif ($action === 'updateMasuk')  $controller->updateMasuk((int)$id);
     elseif ($action === 'deleteMasuk')  $controller->deleteMasuk((int)$id);
+    elseif ($action === 'editKeluar')   $controller->editKeluar((int)$id);
+    elseif ($action === 'updateKeluar') $controller->updateKeluar((int)$id);
+    elseif ($action === 'deleteKeluar') $controller->deleteKeluar((int)$id);
     else                                $controller->index();
 } else {
     http_response_code(404);

@@ -19,6 +19,7 @@ class KeuanganController {
     }
 
     public function store() {
+        requireManagerPermission('keuangan');
         $data = [
             'id_proyek'  => intval($_POST['id_proyek'] ?? 0),
             'tipe'       => $_POST['tipe'] ?? 'pengeluaran',
@@ -32,6 +33,7 @@ class KeuanganController {
     }
 
     public function delete(int $id) {
+        requireManagerPermission('keuangan');
         $this->model->delete($id);
         $_SESSION['flash'] = ['type'=>'success','message'=>'Transaksi berhasil dihapus.'];
         header('Location: ' . BASE_URL . '/public/index.php?page=keuangan'); exit;

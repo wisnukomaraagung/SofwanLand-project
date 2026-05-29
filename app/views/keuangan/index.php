@@ -25,6 +25,7 @@
 
 <div class="grid-2">
     <!-- FORM INPUT -->
+    <?php if (roleCanManage('keuangan')): ?>
     <div class="card">
         <div class="card-header"><span class="card-title">Input Transaksi</span></div>
         <div class="card-body">
@@ -63,6 +64,7 @@
             </form>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- SUMMARY PER PROYEK -->
     <div class="card">
@@ -116,9 +118,13 @@
                     </td>
                     <td class="text-muted"><?= htmlspecialchars($lk['keterangan'] ?? '-') ?></td>
                     <td>
+                        <?php if (roleCanManage('keuangan')): ?>
                         <a href="javascript:void(0)"
                            onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=delete&id=<?= $lk['id'] ?>','transaksi ini')"
                            class="btn btn-danger btn-sm">Hapus</a>
+                        <?php else: ?>
+                        <span class="text-muted" style="font-size:12px;">Readonly</span>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>

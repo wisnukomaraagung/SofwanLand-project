@@ -12,7 +12,7 @@ class ProyekController {
         $proyekList = $this->model->getAll();
         $pageTitle = 'Proyek';
         $pageSubtitle = 'Manajemen daftar proyek kontraktor';
-        $pageAction = '<a href="' . BASE_URL . '/public/index.php?page=proyek&action=create" class="btn btn-primary">+ Tambah Proyek</a>';
+        $pageAction = roleCanManage('proyek') ? '<a href="' . BASE_URL . '/public/index.php?page=proyek&action=create" class="btn btn-primary">+ Tambah Proyek</a>' : '';
         require BASE_PATH . '/app/views/proyek/index.php';
     }
 
@@ -24,14 +24,15 @@ class ProyekController {
         $barangKeluar    = $this->model->getBarangKeluar($id);
         $pageTitle    = htmlspecialchars($proyek['nama_proyek']);
         $pageSubtitle = 'Detail proyek';
-        $pageAction   = '
-            <a href="' . BASE_URL . '/public/index.php?page=proyek&action=edit&id=' . $id . '" class="btn btn-secondary">Edit Proyek</a>
-            <a href="' . BASE_URL . '/public/index.php?page=proyek" class="btn btn-secondary">← Kembali</a>
-        ';
+        $pageAction   = roleCanManage('proyek') ? (
+            '<a href="' . BASE_URL . '/public/index.php?page=proyek&action=edit&id=' . $id . '" class="btn btn-secondary">Edit Proyek</a>' .
+            '<a href="' . BASE_URL . '/public/index.php?page=proyek" class="btn btn-secondary">← Kembali</a>'
+        ) : '<a href="' . BASE_URL . '/public/index.php?page=proyek" class="btn btn-secondary">← Kembali</a>';
         require BASE_PATH . '/app/views/proyek/detail.php';
     }
 
     public function create() {
+        requireManagerPermission('proyek');
         $pageTitle = 'Tambah Proyek';
         $pageSubtitle = 'Buat proyek baru';
         $pageAction = '<a href="' . BASE_URL . '/public/index.php?page=proyek" class="btn btn-secondary">← Kembali</a>';
@@ -40,6 +41,7 @@ class ProyekController {
     }
 
     public function store() {
+        requireManagerPermission('proyek');
         $data = [
             'nama_proyek'    => trim($_POST['nama_proyek'] ?? ''),
             'lokasi'         => trim($_POST['lokasi'] ?? ''),
@@ -61,6 +63,7 @@ class ProyekController {
     }
 
     public function edit(int $id) {
+        requireManagerPermission('proyek');
         $proyek = $this->model->getById($id);
         if (!$proyek) { header('Location: ' . BASE_URL . '/public/index.php?page=proyek'); exit; }
         $pageTitle = 'Edit Proyek';
@@ -70,6 +73,7 @@ class ProyekController {
     }
 
     public function update(int $id) {
+        requireManagerPermission('proyek');
         $data = [
             'nama_proyek'    => trim($_POST['nama_proyek'] ?? ''),
             'lokasi'         => trim($_POST['lokasi'] ?? ''),
@@ -86,6 +90,7 @@ class ProyekController {
     }
 
     public function delete(int $id) {
+        requireManagerPermission('proyek');
         $this->model->delete($id);
         $_SESSION['flash'] = ['type' => 'success', 'message' => 'Proyek berhasil dihapus.'];
         header('Location: ' . BASE_URL . '/public/index.php?page=proyek');

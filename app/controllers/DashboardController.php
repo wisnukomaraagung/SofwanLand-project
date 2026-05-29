@@ -21,18 +21,16 @@ class DashboardController {
             $daftarProyek      = $this->model->getDaftarProyek();
             $biayaPerBulan     = $this->model->getBiayaPerBulan();
             $progressProyek    = $this->model->getProgressPerProyek();
-            require BASE_PATH . '/app/views/dashboard_manager.php';
-            return;
+        } else {
+            $totalKaryawan     = $this->model->getTotalKaryawan();
+            $absensiBulanIni   = $this->model->getAbsensiBulanIni();
+            $totalBarang       = $this->model->getTotalBarang();
+            $totalBarangKeluar = $this->model->getTotalBarangKeluar();
+            $barangStokRendah  = $this->model->getBarangStokRendah();
+            $absensiPerStatus  = $this->model->getAbsensiPerStatus();
+            $rekapAbsensi      = $this->model->getRekapAbsensiProyek();
         }
 
-        // Admin dashboard
-        $totalKaryawan     = $this->model->getTotalKaryawan();
-        $absensiBulanIni   = $this->model->getAbsensiBulanIni();
-        $totalBarang       = $this->model->getTotalBarang();
-        $totalBarangKeluar = $this->model->getTotalBarangKeluar();
-        $barangStokRendah  = $this->model->getBarangStokRendah();
-        $absensiPerStatus  = $this->model->getAbsensiPerStatus();
-        $rekapAbsensi      = $this->model->getRekapAbsensiProyek();
-        require BASE_PATH . '/app/views/dashboard_admin.php';
+        require BASE_PATH . '/app/views/dashboard.php';
     }
 }

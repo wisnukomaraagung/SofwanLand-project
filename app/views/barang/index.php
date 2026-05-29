@@ -1,6 +1,7 @@
 <?php require BASE_PATH . '/app/views/layouts/header.php';
 $barangForSelect = $barangList; // reuse for forms
 $proyekList = (new ProyekModel())->getAll();
+$canManageBarang = roleCanManage('barang');
 ?>
 
 <!-- SUMMARY CARDS -->
@@ -39,8 +40,13 @@ $activeTab = $_GET['tab'] ?? 'masuk';
 
 <?php if ($activeTab === 'masuk'): ?>
 <!-- BARANG MASUK -->
+<?php if ($canManageBarang): ?>
 <div class="split-layout">
+<?php else: ?>
+<div>
+<?php endif; ?>
     <!-- LEFT: FORM -->
+    <?php if ($canManageBarang): ?>
     <div class="card">
         <div class="card-header">
             <span class="card-title">↓ CATAT BARANG MASUK</span>
@@ -120,6 +126,9 @@ $activeTab = $_GET['tab'] ?? 'masuk';
 
                 <button type="submit" class="btn btn-primary" style="margin-top:20px; width: 100%; justify-content: center; padding: 14px; font-size: 14px;">SIMPAN BARANG MASUK</button>
             </form>
+            <?php else: ?>
+            <div style="padding: 24px; color: #555;">Hanya admin yang dapat mencatat barang masuk dan mengedit riwayat masuk.</div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -144,12 +153,12 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                         <th>Total</th>
                         <th>Supplier</th>
                         <th>Keterangan</th>
-                        <th>Aksi</th>
+                        <?php if ($canManageBarang): ?><th>Aksi</th><?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($masukList)): ?>
-                    <tr><td colspan="7" class="text-center text-muted" style="padding:40px">Belum ada riwayat masuk</td></tr>
+                    <tr><td colspan="<?= $canManageBarang ? 9 : 8 ?>" class="text-center text-muted" style="padding:40px">Belum ada riwayat masuk</td></tr>
                     <?php else: ?>
                     <?php foreach ($masukList as $i => $m): ?>
                     <tr>
@@ -173,12 +182,14 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                         <td class="text-muted" style="font-size:12px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($m['keterangan'] ?? '') ?>">
                             <?= htmlspecialchars($m['keterangan'] ?? '—') ?>
                         </td>
+                        <?php if ($canManageBarang): ?>
                         <td>
-                            <div class="flex" style="gap:4px">
-                                <a href="?page=barang&action=editMasuk&id=<?= $m['id'] ?>" class="btn btn-secondary btn-sm" title="Edit" style="padding:4px 8px">✏️</a>
-                                <a href="javascript:void(0)" onclick="confirmDelete('?page=barang&action=deleteMasuk&id=<?= $m['id'] ?>', 'Data Masuk: <?= htmlspecialchars($m['nama_barang'], ENT_QUOTES) ?>')" class="btn btn-secondary btn-sm" title="Hapus" style="padding:4px 8px; color: #c0392b;">🗑️</a>
+                            <div class="flex">
+                                <a href="?page=barang&action=editMasuk&id=<?= $m['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
+                                <a href="javascript:void(0)" onclick="confirmDelete('?page=barang&action=deleteMasuk&id=<?= $m['id'] ?>','<?= htmlspecialchars($m['nama_barang'],ENT_QUOTES) ?>')" class="btn btn-danger btn-sm">Hapus</a>
                             </div>
                         </td>
+                        <?php endif; ?>
                     </tr>
                     <?php endforeach; ?>
                     <?php endif; ?>
@@ -198,12 +209,13 @@ $activeTab = $_GET['tab'] ?? 'masuk';
             <thead>
                 <tr>
                     <th>#</th><th>Nama Barang</th><th>Satuan</th><th class="text-right">Harga Satuan</th>
-                    <th class="text-right">Masuk</th><th class="text-right">Keluar</th><th class="text-right">Stok</th><th>Aksi</th>
+                    <th class="text-right">Masuk</th><th class="text-right">Keluar</th><th class="text-right">Stok</th>
+                    <?php if ($canManageBarang): ?><th>Aksi</th><?php endif; ?>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($barangList)): ?>
-                <tr><td colspan="8" class="text-center text-muted" style="padding:40px">Belum ada barang</td></tr>
+                <tr><td colspan="<?= $canManageBarang ? 8 : 7 ?>" class="text-center text-muted" style="padding:40px">Belum ada barang</td></tr>
                 <?php else: ?>
                 <?php foreach ($barangList as $i => $b): ?>
                 <tr>
@@ -214,12 +226,14 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                     <td class="text-right"><?= number_format($b['total_masuk']) ?></td>
                     <td class="text-right"><?= number_format($b['total_keluar']) ?></td>
                     <td class="text-right fw-700" style="<?= $b['stok'] < 10 ? 'color:#c0392b' : '' ?>"><?= number_format($b['stok']) ?></td>
+                    <?php if ($canManageBarang): ?>
                     <td>
                         <div class="flex">
                             <a href="?page=barang&action=edit&id=<?= $b['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
                             <a href="javascript:void(0)" onclick="confirmDelete('?page=barang&action=delete&id=<?= $b['id'] ?>','<?= htmlspecialchars($b['nama_barang'],ENT_QUOTES) ?>')" class="btn btn-danger btn-sm">Hapus</a>
                         </div>
                     </td>
+                    <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
                 <?php endif; ?>
@@ -230,7 +244,12 @@ $activeTab = $_GET['tab'] ?? 'masuk';
 
 <?php elseif ($activeTab === 'keluar'): ?>
 <!-- BARANG KELUAR -->
+<?php if ($canManageBarang): ?>
 <div class="grid-2">
+<?php else: ?>
+<div>
+<?php endif; ?>
+    <?php if ($canManageBarang): ?>
     <div class="card">
         <div class="card-header"><span class="card-title">↑ Input Barang Keluar</span></div>
         <div class="card-body">
@@ -238,7 +257,6 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                 <div class="toggle-tab active" id="tab-upload" onclick="switchUploadMode('upload')">📁 UPLOAD</div>
                 <div class="toggle-tab" id="tab-kamera" onclick="switchUploadMode('kamera')">📷 KAMERA</div>
             </div>
-
             <form method="POST" action="?page=barang&action=storeKeluar" enctype="multipart/form-data" id="form-keluar">
                 
                 <!-- UPLOAD/CAMERA AREA -->
@@ -294,6 +312,9 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                 </div>
                 <button type="submit" class="btn btn-primary" style="margin-top:12px">Simpan Barang Keluar</button>
             </form>
+            <?php else: ?>
+            <div style="padding: 24px; color: #555;">Hanya admin yang dapat mencatat barang keluar.</div>
+            <?php endif; ?>
         </div>
     </div>
     <div class="card">
@@ -303,10 +324,19 @@ $activeTab = $_GET['tab'] ?? 'masuk';
         </div>
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Tanggal</th><th>Barang</th><th>Proyek</th><th class="text-right">Jumlah</th><th>Keterangan</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Barang</th>
+                        <th>Proyek</th>
+                        <th class="text-right">Jumlah</th>
+                        <th>Keterangan</th>
+                        <?php if ($canManageBarang): ?><th>Aksi</th><?php endif; ?>
+                    </tr>
+                </thead>
                 <tbody>
                     <?php if (empty($keluarList)): ?>
-                    <tr><td colspan="5" class="text-center text-muted" style="padding:24px">Belum ada data</td></tr>
+                    <tr><td colspan="<?= $canManageBarang ? 6 : 5 ?>" class="text-center text-muted" style="padding:24px">Belum ada data</td></tr>
                     <?php else: ?>
                     <?php foreach ($keluarList as $k): ?>
                     <tr>
@@ -317,6 +347,14 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                         <td class="text-muted" style="font-size:12px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($k['keterangan'] ?? '') ?>">
                             <?= htmlspecialchars($k['keterangan'] ?? '—') ?>
                         </td>
+                        <?php if ($canManageBarang): ?>
+                        <td>
+                            <div class="flex">
+                                <a href="?page=barang&action=editKeluar&id=<?= $k['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
+                                <a href="javascript:void(0)" onclick="confirmDelete('?page=barang&action=deleteKeluar&id=<?= $k['id'] ?>','<?= htmlspecialchars($k['nama_barang'],ENT_QUOTES) ?>')" class="btn btn-danger btn-sm">Hapus</a>
+                            </div>
+                        </td>
+                        <?php endif; ?>
                     </tr>
                     <?php endforeach; ?>
                     <?php endif; ?>
