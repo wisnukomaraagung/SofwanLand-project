@@ -43,9 +43,11 @@
                     <td>
                         <div class="flex">
                             <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=detail&id=<?= $p['id'] ?>" class="btn btn-secondary btn-sm">Detail</a>
+                            <?php if (roleCanManage('proyek')): ?>
                             <a href="javascript:void(0)"
                                onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=proyek&action=delete&id=<?= $p['id'] ?>', '<?= htmlspecialchars($p['nama_proyek'], ENT_QUOTES) ?>')"
                                class="btn btn-danger btn-sm">Hapus</a>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>

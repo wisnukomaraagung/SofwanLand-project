@@ -17,7 +17,7 @@ class BarangController {
         $summary     = $this->model->getDashboardSummary();
         $pageTitle   = 'Manajemen Barang';
         $pageSubtitle = 'Pencatatan barang masuk & keluar - terintegrasi laporan keuangan otomatis';
-        $pageAction  = '<a href="' . BASE_URL . '/public/index.php?page=barang&action=create" class="btn btn-primary">+ Tambah Barang</a>';
+        $pageAction  = roleCanManage('barang') ? '<a href="' . BASE_URL . '/public/index.php?page=barang&action=create" class="btn btn-primary">+ Tambah Barang</a>' : '';
         require BASE_PATH . '/app/views/barang/index.php';
     }
 
@@ -46,6 +46,7 @@ class BarangController {
     }
 
     public function edit(int $id) {
+        requireManagerPermission('barang');
         $barang = $this->model->getById($id);
         if (!$barang) { header('Location: ' . BASE_URL . '/public/index.php?page=barang'); exit; }
         $pageTitle = 'Edit Barang';
@@ -55,6 +56,7 @@ class BarangController {
     }
 
     public function update(int $id) {
+        requireManagerPermission('barang');
         $data = [
             'nama_barang'  => trim($_POST['nama_barang'] ?? ''),
             'satuan'       => trim($_POST['satuan'] ?? ''),
@@ -66,6 +68,7 @@ class BarangController {
     }
 
     public function delete(int $id) {
+        requireManagerPermission('barang');
         $this->model->delete($id);
         $_SESSION['flash'] = ['type'=>'success','message'=>'Barang berhasil dihapus.'];
         header('Location: ' . BASE_URL . '/public/index.php?page=barang'); exit;
@@ -73,6 +76,7 @@ class BarangController {
 
     // Barang Masuk
     public function storeMasuk() {
+        requireManagerPermission('barang');
         // Handle new item creation dynamically
         $id_barang = intval($_POST['id_barang'] ?? 0);
         if ($id_barang === 0 && !empty($_POST['nama_barang_baru'])) {
@@ -129,6 +133,7 @@ class BarangController {
 
     // Barang Keluar
     public function storeKeluar() {
+        requireManagerPermission('barang');
         // Handle file upload (foto bukti)
         $foto_bukti = null;
         if (isset($_FILES['foto_bukti']) && $_FILES['foto_bukti']['error'] === UPLOAD_ERR_OK) {
@@ -236,6 +241,7 @@ class BarangController {
     }
 
     public function editMasuk(int $id) {
+        requireManagerPermission('barang');
         $masuk = $this->model->getMasukById($id);
         if (!$masuk) { header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=masuk'); exit; }
         
@@ -247,6 +253,7 @@ class BarangController {
     }
 
     public function updateMasuk(int $id) {
+        requireManagerPermission('barang');
         $oldMasuk = $this->model->getMasukById($id);
         $foto_kuitansi = $oldMasuk['foto_kuitansi'] ?? null;
 
@@ -283,8 +290,63 @@ class BarangController {
     }
 
     public function deleteMasuk(int $id) {
+        requireManagerPermission('barang');
         $this->model->deleteMasuk($id);
         $_SESSION['flash'] = ['type'=>'success','message'=>'Riwayat barang masuk berhasil dihapus.'];
         header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=masuk'); exit;
+    }
+
+    public function editKeluar(int $id) {
+        requireManagerPermission('barang');
+        $keluar = $this->model->getKeluarById($id);
+        if (!$keluar) { header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=keluar'); exit; }
+
+        $barangList = $this->model->getAllForSelect();
+        $proyekList = $this->proyekModel->getAll();
+        $pageTitle = 'Edit Barang Keluar';
+        $pageSubtitle = 'Edit catatan riwayat keluar';
+        $pageAction = '<a href="' . BASE_URL . '/public/index.php?page=barang&tab=keluar" class="btn btn-secondary">← Kembali</a>';
+        require BASE_PATH . '/app/views/barang/edit_keluar.php';
+    }
+
+    public function updateKeluar(int $id) {
+        requireManagerPermission('barang');
+        $oldKeluar = $this->model->getKeluarById($id);
+        $foto_bukti = $oldKeluar['foto_bukti'] ?? null;
+
+        if (isset($_FILES['foto_bukti']) && $_FILES['foto_bukti']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = BASE_PATH . '/public/uploads/kuitansi/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $fileName = time() . '_keluar_' . basename($_FILES['foto_bukti']['name']);
+            $targetPath = $uploadDir . $fileName;
+            if (move_uploaded_file($_FILES['foto_bukti']['tmp_name'], $targetPath)) {
+                if ($foto_bukti && file_exists(BASE_PATH . '/public/' . $foto_bukti)) {
+                    @unlink(BASE_PATH . '/public/' . $foto_bukti);
+                }
+                $foto_bukti = 'uploads/kuitansi/' . $fileName;
+            }
+        }
+
+        $data = [
+            'id_barang'  => intval($_POST['id_barang'] ?? 0),
+            'id_proyek'  => intval($_POST['id_proyek'] ?? 0),
+            'jumlah'     => intval($_POST['jumlah'] ?? 0),
+            'tanggal'    => $_POST['tanggal'] ?? date('Y-m-d'),
+            'keterangan' => trim($_POST['keterangan'] ?? ''),
+            'foto_bukti' => $foto_bukti,
+        ];
+
+        $this->model->updateKeluar($id, $data);
+        $_SESSION['flash'] = ['type'=>'success','message'=>'Riwayat barang keluar berhasil diperbarui.'];
+        header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=keluar'); exit;
+    }
+
+    public function deleteKeluar(int $id) {
+        requireManagerPermission('barang');
+        $this->model->deleteKeluar($id);
+        $_SESSION['flash'] = ['type'=>'success','message'=>'Riwayat barang keluar berhasil dihapus.'];
+        header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=keluar'); exit;
     }
 }

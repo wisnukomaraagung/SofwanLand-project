@@ -100,6 +100,58 @@ class BarangModel {
         ")->fetchAll();
     }
 
+    public function getKeluarById(int $id): ?array {
+        $stmt = $this->db->prepare("SELECT bk.*, b.nama_barang, b.satuan, p.nama_proyek FROM barang_keluar bk JOIN barang b ON b.id = bk.id_barang JOIN proyek p ON p.id = bk.id_proyek WHERE bk.id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function updateKeluar(int $id, array $data): bool {
+        $pdo = $this->db;
+        $pdo->beginTransaction();
+        try {
+            $old = $pdo->query("SELECT id_barang, jumlah FROM barang_keluar WHERE id = $id")->fetch();
+            if ($old) {
+                if ($old['id_barang'] == $data['id_barang']) {
+                    $diff = $data['jumlah'] - $old['jumlah'];
+                    $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$diff, $old['id_barang']]);
+                } else {
+                    $pdo->prepare("UPDATE barang SET stok = stok + ? WHERE id = ?")->execute([$old['jumlah'], $old['id_barang']]);
+                    $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$data['jumlah'], $data['id_barang']]);
+                }
+
+                $stmt = $pdo->prepare("UPDATE barang_keluar SET id_barang=?, id_proyek=?, jumlah=?, tanggal=?, keterangan=?, foto_bukti=? WHERE id=?");
+                $stmt->execute([
+                    $data['id_barang'], $data['id_proyek'], $data['jumlah'], $data['tanggal'], $data['keterangan'] ?? null, $data['foto_bukti'] ?? null, $id
+                ]);
+            }
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function deleteKeluar(int $id): bool {
+        $pdo = $this->db;
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare("SELECT id_barang, jumlah FROM barang_keluar WHERE id = ?");
+            $stmt->execute([$id]);
+            $keluar = $stmt->fetch();
+            if ($keluar) {
+                $pdo->prepare("UPDATE barang SET stok = stok + ? WHERE id = ?")->execute([$keluar['jumlah'], $keluar['id_barang']]);
+                $pdo->prepare("DELETE FROM barang_keluar WHERE id = ?")->execute([$id]);
+            }
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return false;
+        }
+    }
+
     public function storeMasuk(array $data): bool {
         $pdo = $this->db;
         $pdo->beginTransaction();

@@ -19,6 +19,7 @@ class AbsensiController {
     }
 
     public function store() {
+        requireManagerPermission('absensi');
         $data = [
             'id_karyawan' => intval($_POST['id_karyawan'] ?? 0),
             'id_proyek'   => intval($_POST['id_proyek'] ?? 0),
@@ -32,6 +33,7 @@ class AbsensiController {
     }
 
     public function delete(int $id) {
+        requireManagerPermission('absensi');
         $this->model->delete($id);
         $_SESSION['flash'] = ['type'=>'success','message'=>'Absensi berhasil dihapus.'];
         header('Location: ' . BASE_URL . '/public/index.php?page=absensi'); exit;

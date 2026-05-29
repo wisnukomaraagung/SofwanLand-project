@@ -4,6 +4,9 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
+session_start();
+require_once __DIR__ . '/../config/roles.php';
+
 // ============ KONEKSI DATABASE ============
 $host = 'localhost';
 $dbname = 'kontraktor_db';
@@ -31,6 +34,10 @@ try {
             
         // ============ ADD KARYAWAN ============
         case 'addKaryawan':
+            if (!roleCanManage('absensi')) {
+                echo json_encode(['success' => false, 'message' => 'Akses ditolak.']);
+                break;
+            }
             $nama = $_POST['nama'] ?? '';
             $jabatan = $_POST['jabatan'] ?? '';
             $no_telp = $_POST['no_telp'] ?? '';
@@ -44,6 +51,10 @@ try {
             
         // ============ DELETE KARYAWAN ============
         case 'deleteKaryawan':
+            if (!roleCanManage('absensi')) {
+                echo json_encode(['success' => false, 'message' => 'Akses ditolak.']);
+                break;
+            }
             $id = $_GET['id'] ?? 0;
             $stmt = $db->prepare("DELETE FROM karyawan WHERE id = ?");
             $stmt->execute([$id]);
@@ -156,6 +167,10 @@ try {
             
         // ============ REGISTER FACE ============
         case 'registerFace':
+            if (!roleCanManage('absensi')) {
+                echo json_encode(['success' => false, 'message' => 'Akses ditolak.']);
+                break;
+            }
             $input = json_decode(file_get_contents('php://input'), true);
             $id = $input['id'] ?? 0;
             $faceDescriptor = json_encode($input['face_descriptor'] ?? []);
@@ -168,6 +183,10 @@ try {
             
         // ============ STORE ABSENSI ============
         case 'storeAbsensi':
+            if (!roleCanManage('absensi')) {
+                echo json_encode(['success' => false, 'message' => 'Akses ditolak.']);
+                break;
+            }
             $id_karyawan = $_POST['id_karyawan'] ?? 0;
             $id_proyek = $_POST['id_proyek'] ?? 0;
             $absensi_type = $_POST['absensi_type'] ?? 'masuk';

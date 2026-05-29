@@ -1,4 +1,7 @@
-<?php require BASE_PATH . '/app/views/layouts/header.php'; ?>
+<?php require BASE_PATH . '/app/views/layouts/header.php';
+$canManageAbsensi = roleCanManage('absensi');
+$activeTab = $_GET['tab'] ?? ($canManageAbsensi ? 'absen-tab' : 'karyawan-tab');
+?>
 
 <style>
 /* ============ STYLE SEMUA PUTIH ============ */
@@ -47,20 +50,23 @@ body { background: #f5f5f5; }
 </style>
 
 <div class="tab-buttons">
-    <button class="tab-btn active" onclick="openTab('absen-tab')">📸 ABSEN WAJAH</button>
-    <button class="tab-btn" onclick="openTab('karyawan-tab')">👥 DAFTAR KARYAWAN</button>
-    <button class="tab-btn" onclick="openTab('rekap-tab')">📊 REKAP ABSENSI</button>
-    <button class="tab-btn" onclick="openTab('gaji-tab')">💰 REKAP GAJI</button>
+    <?php if ($canManageAbsensi): ?>
+        <button class="tab-btn <?= $activeTab === 'absen-tab' ? 'active' : '' ?>" onclick="openTab('absen-tab')">📸 ABSEN WAJAH</button>
+    <?php endif; ?>
+    <button class="tab-btn <?= $activeTab === 'karyawan-tab' ? 'active' : '' ?>" onclick="openTab('karyawan-tab')">👥 DAFTAR KARYAWAN</button>
+    <button class="tab-btn <?= $activeTab === 'rekap-tab' ? 'active' : '' ?>" onclick="openTab('rekap-tab')">📊 REKAP ABSENSI</button>
+    <button class="tab-btn <?= $activeTab === 'gaji-tab' ? 'active' : '' ?>" onclick="openTab('gaji-tab')">💰 REKAP GAJI</button>
 </div>
 
 <!-- TAB 1: ABSENSI WAJAH -->
-<div id="absen-tab" class="tab-content active">
+<div id="absen-tab" class="tab-content <?= $activeTab === 'absen-tab' ? 'active' : '' ?>">
     <div class="grid-2">
         <div class="card">
             <div class="card-header">
                 <span class="card-title">🎯 Scan Wajah Absensi</span>
             </div>
             <div class="card-body">
+                <?php if ($canManageAbsensi): ?>
                 <div style="position: relative; display: flex; justify-content: center;">
                     <div style="position: relative;">
                         <video id="video" autoplay muted playsinline style="width:100%; max-width:500px; border-radius:8px;"></video>
@@ -74,8 +80,13 @@ body { background: #f5f5f5; }
                     <button id="stop-camera" class="btn-camera btn-camera-stop">⏹️ Stop Kamera</button>
                 </div>
                 
-                <div id="detected-info" style="display: none;">
-                    <div class="detected-card">
+                <div id="detected-info" style="display: none;"></div>
+                <?php else: ?>
+                <div style="padding: 24px; color: #555;">
+                    Hanya admin yang dapat mencatat absensi. Anda dapat melihat daftar karyawan dan rekap dari tab berikutnya.
+                </div>
+                <?php endif; ?>
+                <div class="detected-card">
                         <div style="display: flex; align-items: center; gap: 15px;">
                             <div style="font-size: 48px;">👤</div>
                             <div>
@@ -87,6 +98,7 @@ body { background: #f5f5f5; }
                     </div>
                 </div>
                 
+                <?php if ($canManageAbsensi): ?>
                 <div id="absen-form" style="display: none;">
                     <input type="hidden" id="recognized-id">
                     <input type="hidden" id="face-snapshot">
@@ -123,6 +135,7 @@ body { background: #f5f5f5; }
                     
                     <button id="submit-absen" class="btn-primary" style="width:100%; margin-top:15px;">✅ Absen Sekarang</button>
                 </div>
+                <?php endif; ?>
                 
                 <div id="status-message"></div>
             </div>
@@ -153,7 +166,9 @@ body { background: #f5f5f5; }
     <div class="card">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <span class="card-title">👥 Daftar Karyawan</span>
+            <?php if ($canManageAbsensi): ?>
             <button onclick="showModalKaryawan()" class="btn-primary">+ Tambah Karyawan</button>
+            <?php endif; ?>
         </div>
         <div class="table-wrap" style="overflow-x: auto;">
             <table class="table">
@@ -306,6 +321,7 @@ body { background: #f5f5f5; }
 <script>
 // ============ BASE URL ============
 const BASE_URL = window.location.origin + '/SofwanLand-project/SofwanLand-project/public';
+const canManageAbsensi = <?= $canManageAbsensi ? 'true' : 'false' ?>;
 
 // ============ TAB NAVIGATION ============
 function openTab(tabId) {
@@ -346,8 +362,10 @@ async function loadKaryawan() {
                         <td>${k.no_telp || '-'}</td>
                         <td>${k.face_descriptor ? '<span class="badge-hadir">✅ Terdaftar</span>' : '<span class="badge-alpha">❌ Belum</span>'}
                         <td>
-                            <button onclick="registerFace(${k.id})" class="btn-primary btn-sm">📸 Reg Wajah</button>
-                            <button onclick="deleteKaryawan(${k.id})" class="btn-danger btn-sm">Hapus</button>
+                            ${canManageAbsensi ? `
+                                <button onclick="registerFace(${k.id})" class="btn-primary btn-sm">📸 Reg Wajah</button>
+                                <button onclick="deleteKaryawan(${k.id})" class="btn-danger btn-sm">Hapus</button>
+                            ` : '<span class="text-muted" style="font-size:12px;">Readonly</span>'}
                         </td>
                     </tr>
                 `;
