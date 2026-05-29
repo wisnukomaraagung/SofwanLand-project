@@ -18,16 +18,58 @@ class ProyekController {
 
     public function detail(int $id) {
         $proyek = $this->model->getDetail($id);
-        if (!$proyek) { header('Location: ' . BASE_URL . '/public/index.php?page=proyek'); exit; }
+
+        if (!$proyek) {
+            header('Location: ' . BASE_URL . '/public/index.php?page=proyek');
+            exit;
+        }
+
         $progressHistory = $this->model->getProgressHistory($id);
         $keuanganHistory = $this->model->getKeuanganHistory($id);
         $barangKeluar    = $this->model->getBarangKeluar($id);
-        $pageTitle    = htmlspecialchars($proyek['nama_proyek']);
+        $dokumentasiList = $this->model->getDokumentasi($id);
+        
+        $dokumentasiBaru = count($dokumentasiList);
+
+
+        $pengeluaranList = array_map(function($item) {
+            return [
+                'tanggal' => $item['tanggal'],
+                'kategori' => ucfirst($item['tipe']),
+                'keterangan' => $item['keterangan'],
+                'nominal' => (int)$item['jumlah']
+            ];
+        }, $keuanganHistory);
+
+        $rincianPekerjaan = [
+            [
+                'nama' => 'Pondasi',
+                'progress' => 100,
+                'status' => 'selesai',
+                'estimasi_hari' => 7,
+                'deskripsi' => 'Pekerjaan pondasi utama'
+            ],
+            [
+                'nama' => 'Struktur Beton',
+                'progress' => 65,
+                'status' => 'proses',
+                'estimasi_hari' => 14,
+                'deskripsi' => 'Pengerjaan struktur lantai'
+            ],
+            [
+                'nama' => 'Finishing',
+                'progress' => 10,
+                'status' => 'belum-mulai',
+                'estimasi_hari' => 10,
+                'deskripsi' => 'Tahap finishing akhir'
+            ]
+        ];
+
+        $pageTitle = htmlspecialchars($proyek['nama_proyek']);
         $pageSubtitle = 'Detail proyek';
-        $pageAction   = roleCanManage('proyek') ? (
-            '<a href="' . BASE_URL . '/public/index.php?page=proyek&action=edit&id=' . $id . '" class="btn btn-secondary">Edit Proyek</a>' .
-            '<a href="' . BASE_URL . '/public/index.php?page=proyek" class="btn btn-secondary">← Kembali</a>'
-        ) : '<a href="' . BASE_URL . '/public/index.php?page=proyek" class="btn btn-secondary">← Kembali</a>';
+
+        
+
         require BASE_PATH . '/app/views/proyek/detail.php';
     }
 
@@ -96,4 +138,7 @@ class ProyekController {
         header('Location: ' . BASE_URL . '/public/index.php?page=proyek');
         exit;
     }
+
+   
+
 }

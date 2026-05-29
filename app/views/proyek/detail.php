@@ -364,6 +364,7 @@ if(pekerjaanList.length && document.getElementById('timeDistributionChart')) {
     new Chart(document.getElementById('timeDistributionChart').getContext('2d'), { type:'pie', data:{ labels:pekerjaanList.map(p=>p.nama), datasets:[{ data:pekerjaanList.map(p=>p.estimasi_hari||5), backgroundColor:['#2563eb','#16a34a','#f59e0b','#dc2626'] }] }, options:{ responsive:true, maintainAspectRatio:false } });
 }
 
+
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
