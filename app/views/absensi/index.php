@@ -1,7 +1,4 @@
-<?php require BASE_PATH . '/app/views/layouts/header.php';
-$canManageAbsensi = roleCanManage('absensi');
-$activeTab = $_GET['tab'] ?? ($canManageAbsensi ? 'absen-tab' : 'karyawan-tab');
-?>
+<?php require BASE_PATH . '/app/views/layouts/header.php'; ?>
 
 <style>
     /* Warna Putih Abu-Abu */
@@ -333,7 +330,12 @@ $activeTab = $_GET['tab'] ?? ($canManageAbsensi ? 'absen-tab' : 'karyawan-tab');
     }
 </style>
 
-<<<<<<< HEAD
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>📋 Absensi</h1>
+        <p>Catatan kehadiran karyawan per proyek</p>
+    </div>
+
     <div class="nav-menu">
         <button class="nav-item active" data-page="absensi">📸 ABSEN WAJAH</button>
         <button class="nav-item" data-page="karyawan">👥 DAFTAR KARYAWAN</button>
@@ -403,6 +405,11 @@ $activeTab = $_GET['tab'] ?? ($canManageAbsensi ? 'absen-tab' : 'karyawan-tab');
                     </div>
                     <div class="weather-widget">
                         <div>
+                            <div class="weather-temp">23°C</div>
+                            <div>Cerah</div>
+                        </div>
+                        <div class="weather-info">
+                            <div class="weather-icon">☀️</div>
                             <div id="current-time">--:--</div>
                             <div id="current-date">--/--/----</div>
                         </div>
@@ -422,256 +429,55 @@ $activeTab = $_GET['tab'] ?? ($canManageAbsensi ? 'absen-tab' : 'karyawan-tab');
                             <tr><td colspan="7" style="text-align:center">Loading...</td></tr>
                         </tbody>
                     </table>
-=======
-<div class="tab-buttons">
-    <?php if ($canManageAbsensi): ?>
-        <button class="tab-btn <?= $activeTab === 'absen-tab' ? 'active' : '' ?>" onclick="openTab('absen-tab')">📸 ABSEN WAJAH</button>
-    <?php endif; ?>
-    <button class="tab-btn <?= $activeTab === 'karyawan-tab' ? 'active' : '' ?>" onclick="openTab('karyawan-tab')">👥 DAFTAR KARYAWAN</button>
-    <button class="tab-btn <?= $activeTab === 'rekap-tab' ? 'active' : '' ?>" onclick="openTab('rekap-tab')">📊 REKAP ABSENSI</button>
-    <button class="tab-btn <?= $activeTab === 'gaji-tab' ? 'active' : '' ?>" onclick="openTab('gaji-tab')">💰 REKAP GAJI</button>
-</div>
-
-<!-- TAB 1: ABSENSI WAJAH -->
-<div id="absen-tab" class="tab-content <?= $activeTab === 'absen-tab' ? 'active' : '' ?>">
-    <div class="grid-2">
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">🎯 Scan Wajah Absensi</span>
-            </div>
-            <div class="card-body">
-                <?php if ($canManageAbsensi): ?>
-                <div style="position: relative; display: flex; justify-content: center;">
-                    <div style="position: relative;">
-                        <video id="video" autoplay muted playsinline style="width:100%; max-width:500px; border-radius:8px;"></video>
-                        <canvas id="overlay" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
-                        <div id="scanning-status" class="scanning-status">🔍 Mulai kamera untuk scan</div>
-                    </div>
                 </div>
-                
-                <div style="text-align: center; margin: 15px 0;">
-                    <button id="start-camera" class="btn-camera btn-camera-start">🎥 Mulai Kamera</button>
-                    <button id="stop-camera" class="btn-camera btn-camera-stop">⏹️ Stop Kamera</button>
-                </div>
-                
-                <div id="detected-info" style="display: none;"></div>
-                <?php else: ?>
-                <div style="padding: 24px; color: #555;">
-                    Hanya admin yang dapat mencatat absensi. Anda dapat melihat daftar karyawan dan rekap dari tab berikutnya.
-                </div>
-                <?php endif; ?>
-                <div class="detected-card">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="font-size: 48px;">👤</div>
-                            <div>
-                                <h3 id="detected-name" style="margin:0">-</h3>
-                                <p id="detected-position" style="margin:5px 0 0">-</p>
-                                <p id="detected-phone" style="margin:5px 0 0; font-size:12px;">📞 -</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <?php if ($canManageAbsensi): ?>
-                <div id="absen-form" style="display: none;">
-                    <input type="hidden" id="recognized-id">
-                    <input type="hidden" id="face-snapshot">
-                    <input type="hidden" id="absen-type" value="masuk">
-                    
-                    <div class="form-group">
-                        <label>📍 Pilih Proyek</label>
-                        <select id="id_proyek" class="form-control" required>
-                            <option value="">-- Pilih Proyek --</option>
-                            <?php foreach ($proyekList as $p): ?>
-                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nama_proyek']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>⏰ Tipe Absensi</label>
-                        <div style="display: flex; gap: 10px;">
-                            <button type="button" id="btn-masuk" style="flex:1; padding:10px; background:#007bff; color:white; border:none; border-radius:4px;">📥 Absen Masuk</button>
-                            <button type="button" id="btn-keluar" style="flex:1; padding:10px; background:#6c757d; color:white; border:none; border-radius:4px;">📤 Absen Keluar</button>
-                        </div>
-                    </div>
-                    
-                    <div id="overtime-box" style="display:none; background:#f8f9fa; padding:15px; border-radius:4px; margin:10px 0;">
-                        <label>⏰ Lembur (Jam)</label>
-                        <input type="number" id="lembur" step="0.5" min="0" max="12" class="form-control" placeholder="Contoh: 2.5">
-                        <small>Lembur dihitung setelah jam 17:00 (1.5x gaji)</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>📝 Keterangan</label>
-                        <textarea id="keterangan" rows="2" class="form-control" placeholder="Opsional..."></textarea>
-                    </div>
-                    
-                    <button id="submit-absen" class="btn-primary" style="width:100%; margin-top:15px;">✅ Absen Sekarang</button>
-                </div>
-                <?php endif; ?>
-                
-                <div id="status-message"></div>
             </div>
         </div>
         
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">📋 Status Absen Hari Ini</span>
-            </div>
-            <div class="card-body">
-                <div id="status-hari-ini" style="display: flex; gap: 15px;">
-                    <div style="flex:1; text-align:center; padding:15px; background:#f8f9fa; border-radius:8px;">
-                        <div style="font-size:24px; font-weight:bold;" id="total-hadir">0</div>
-                        <div>Hadir Hari Ini</div>
-                    </div>
-                    <div style="flex:1; text-align:center; padding:15px; background:#f8f9fa; border-radius:8px;">
-                        <div style="font-size:24px; font-weight:bold;" id="total-belum-absen">0</div>
-                        <div>Belum Absen</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- TAB 2: DAFTAR KARYAWAN -->
-<div id="karyawan-tab" class="tab-content">
+<!-- Halaman Karyawan -->
+<div id="karyawan-page" style="display: none;">
     <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <span class="card-title">👥 Daftar Karyawan</span>
-            <?php if ($canManageAbsensi): ?>
-            <button onclick="showModalKaryawan()" class="btn-primary">+ Tambah Karyawan</button>
-            <?php endif; ?>
+        <div class="card-header">
+            👥 Daftar Karyawan
+            <button onclick="showTambahKaryawan()" style="float:right; background:#607d8b; color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;">+ Tambah</button>
         </div>
-        <div class="table-wrap" style="overflow-x: auto;">
+        <div class="table-wrap">
             <table class="table">
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>NIK</th>
                         <th>Nama</th>
                         <th>Jabatan</th>
-                        <th>No. Telepon</th>
+                        <th>Gaji Pokok</th>
                         <th>Status Wajah</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="karyawan-tbody">
-                    <!-- Data akan diisi via AJAX -->
+                <tbody id="karyawan-body">
+                    <?php if (!empty($karyawanList) && is_array($karyawanList)): ?>
+                        <?php foreach ($karyawanList as $k): ?>
+                        <tr>
+                            <td><?= $k['id'] ?? '' ?></td>
+                            <td><?= htmlspecialchars($k['nik'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($k['nama'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($k['jabatan'] ?? '-') ?></td>
+                            <td>Rp <?= number_format($k['gaji_pokok'] ?? 0, 0, ',', '.') ?></td>
+                            <td><?= !empty($k['face_descriptor']) ? '✅ Terdaftar' : '❌ Belum' ?></td>
+                            <td>
+                                <button onclick="editKaryawan(<?= $k['id'] ?>)" class="btn-aksi" style="background:#607d8b; color:white; padding:5px 12px; margin:2px; border:none; border-radius:4px; cursor:pointer;">✏️ Edit</button>
+                                <button onclick="deleteKaryawan(<?= $k['id'] ?>)" class="btn-aksi" style="background:#9e9e9e; color:white; padding:5px 12px; margin:2px; border:none; border-radius:4px; cursor:pointer;">🗑️ Hapus</button>
+                                <button onclick="openRegistrasiWajah(<?= $k['id'] ?>)" class="btn-aksi" style="background:#455a64; color:white; padding:5px 12px; margin:2px; border:none; border-radius:4px; cursor:pointer;">📸 Registrasi Wajah</button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="7" style="text-align:center">Belum ada data karyawan</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td></tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-
-<!-- TAB 3: REKAP ABSENSI -->
-<div id="rekap-tab" class="tab-content">
-    <div class="card">
-        <div class="card-header">
-            <span class="card-title">📊 Rekap Absensi Karyawan</span>
-            <div class="filter-bar">
-                <input type="date" id="filter-tanggal" placeholder="Pilih Tanggal">
-                <button id="cari-tanggal" class="btn-primary">🔍 Cari</button>
-                <button id="export-excel-harian" class="btn-excel">📊 Export Excel</button>
-            </div>
-        </div>
-        <div class="table-wrap" style="overflow-x: auto;">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Tanggal</th>
-                        <th>Nama</th>
-                        <th>Jabatan</th>
-                        <th>Jam Masuk</th>
-                        <th>Jam Keluar</th>
-                        <th>Total Jam</th>
-                        <th>Lembur</th>
-                        <th>Status</th>
-                        <th>Keterangan</th>
-                    </tr>
-                </thead>
-                <tbody id="rekap-harian-tbody">
-                    <tr><td colspan="10" style="text-align:center; padding:40px;">Pilih tanggal untuk melihat rekap</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- TAB 4: REKAP GAJI -->
-<div id="gaji-tab" class="tab-content">
-    <div class="grid-2">
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">💰 Ringkasan Gaji</span>
-            </div>
-            <div class="card-body">
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align:center;">
-                    <h3>Total Gaji Bulan Ini</h3>
-                    <div style="font-size: 32px; font-weight: bold;" id="total-gaji">Rp 0</div>
-                </div>
-                <div class="filter-bar">
-                    <select id="gaji-bulan" class="form-control" style="width: auto;">
-                        <option value="1">Januari</option>
-                        <option value="2">Februari</option>
-                        <option value="3">Maret</option>
-                        <option value="4">April</option>
-                        <option value="5">Mei</option>
-                        <option value="6">Juni</option>
-                        <option value="7">Juli</option>
-                        <option value="8">Agustus</option>
-                        <option value="9">September</option>
-                        <option value="10">Oktober</option>
-                        <option value="11">November</option>
-                        <option value="12">Desember</option>
-                    </select>
-                    <select id="gaji-tahun" class="form-control" style="width: auto;">
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                    </select>
-                    <button id="filter-gaji" class="btn-primary">Filter</button>
->>>>>>> 4e4060444ed769c34f717288379411ec461f5a1e
-                </div>
-            </div>
-        </div>
-        
-        <!-- Halaman Karyawan -->
-        <div id="karyawan-page" style="display: none;">
-            <div class="card">
-                <div class="card-header">
-                    👥 Daftar Karyawan
-                    <button onclick="showTambahKaryawan()" style="float:right; background:#607d8b; color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;">+ Tambah</button>
-                </div>
-                <div class="table-wrap">
-                    <table class="table">
-                        <thead>
-                            <tr><th>ID</th><th>NIK</th><th>Nama</th><th>Jabatan</th><th>Status Wajah</th><th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="karyawan-body">
-                            <?php if (!empty($karyawanList) && is_array($karyawanList)): ?>
-                                <?php foreach ($karyawanList as $k): ?>
-                                <tr>
-                                    <td><?= $k['id'] ?? '' ?></td>
-                                    <td><?= htmlspecialchars($k['nik'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($k['nama'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($k['jabatan'] ?? '-') ?></td>
-                                    <td><?= !empty($k['face_descriptor']) ? '✅ Terdaftar' : '❌ Belum' ?></td>
-                                    <td>
-                                        <button onclick="openRegistrasiWajah(<?= $k['id'] ?>)" class="btn-success" style="padding:5px 10px; border:none; border-radius:4px; cursor:pointer;">📸 Registrasi Wajah</button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr><td colspan="6" style="text-align:center">Belum ada data karyawan</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
         
         <!-- Halaman Rekap Absensi -->
         <div id="rekap-page" style="display: none;">
@@ -724,34 +530,6 @@ $activeTab = $_GET['tab'] ?? ($canManageAbsensi ? 'absen-tab' : 'karyawan-tab');
     </div>
 </div>
 
-<div class="card mt-4">
-    <div class="card-header">📅 Filter & Export Data</div>
-    <div class="card-body">
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
-            <div>
-                <label>Tanggal Mulai</label>
-                <input type="date" id="filter_mulai" class="form-control" value="<?= date('Y-m-01') ?>">
-            </div>
-            <div>
-                <label>Tanggal Selesai</label>
-                <input type="date" id="filter_selesai" class="form-control" value="<?= date('Y-m-t') ?>">
-            </div>
-            <div>
-                <label>Proyek</label>
-                <select id="filter_proyek" class="form-control">
-                    <option value="">Semua Proyek</option>
-                    <?php foreach ($proyekList as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nama_proyek']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div>
-                <button id="btn-export-excel" class="btn-camera" style="background:#4caf50;">📊 Export Excel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Modal Tambah Karyawan -->
 <div id="modalKaryawan" class="modal">
     <div class="modal-content">
@@ -787,7 +565,6 @@ $activeTab = $_GET['tab'] ?? ($canManageAbsensi ? 'absen-tab' : 'karyawan-tab');
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <script>
-<<<<<<< HEAD
 // ==================== VARIABLES ====================
 let video = document.getElementById('video');
 let overlay = document.getElementById('overlay');
@@ -795,11 +572,6 @@ let scanningStatus = document.getElementById('scanning-status');
 let stream = null;
 let detectionInterval = null;
 let modelsLoaded = false;
-=======
-// ============ BASE URL ============
-const BASE_URL = window.location.origin + '/SofwanLand-project/SofwanLand-project/public';
-const canManageAbsensi = <?= $canManageAbsensi ? 'true' : 'false' ?>;
->>>>>>> 4e4060444ed769c34f717288379411ec461f5a1e
 
 let regisVideo = null;
 let regisStream = null;
@@ -840,54 +612,7 @@ function closeModal() {
     document.getElementById('modalKaryawan').style.display = 'none';
 }
 
-<<<<<<< HEAD
 document.getElementById('formTambahKaryawan').addEventListener('submit', async (e) => {
-=======
-// ============ LOAD KARYAWAN ============
-async function loadKaryawan() {
-    try {
-        const res = await fetch(`${BASE_URL}/api.php?action=getKaryawan`);
-        const data = await res.json();
-        
-        if (data.success && data.data) {
-            const tbody = document.getElementById('karyawan-tbody');
-            tbody.innerHTML = '';
-            
-            data.data.forEach(k => {
-                const row = `
-                    <tr>
-                        <td>${k.id}</td>
-                        <td><strong>${k.nama}</strong></td>
-                        <td>${k.jabatan}</td>
-                        <td>${k.no_telp || '-'}</td>
-                        <td>${k.face_descriptor ? '<span class="badge-hadir">✅ Terdaftar</span>' : '<span class="badge-alpha">❌ Belum</span>'}
-                        <td>
-                            ${canManageAbsensi ? `
-                                <button onclick="registerFace(${k.id})" class="btn-primary btn-sm">📸 Reg Wajah</button>
-                                <button onclick="deleteKaryawan(${k.id})" class="btn-danger btn-sm">Hapus</button>
-                            ` : '<span class="text-muted" style="font-size:12px;">Readonly</span>'}
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-    } catch(err) {
-        console.error('Load karyawan error:', err);
-    }
-}
-
-// ============ TAMBAH KARYAWAN ============
-function showModalKaryawan() {
-    document.getElementById('modal-karyawan').style.display = 'flex';
-}
-
-function closeModalKaryawan() {
-    document.getElementById('modal-karyawan').style.display = 'none';
-}
-
-document.getElementById('form-karyawan').onsubmit = async (e) => {
->>>>>>> 4e4060444ed769c34f717288379411ec461f5a1e
     e.preventDefault();
     const formData = new FormData(e.target);
     const response = await fetch(API_URL + 'addKaryawan', {
@@ -1248,21 +973,6 @@ async function loadGajiData() {
 // ==================== INIT ====================
 loadModels();
 loadTodayAbsensi();
-
-document.getElementById('btn-export-excel').addEventListener('click', function() {
-    const mulai = document.getElementById('filter_mulai').value;
-    const selesai = document.getElementById('filter_selesai').value;
-    const proyek_id = document.getElementById('filter_proyek').value;
-    
-    let url = API_URL + 'exportExcel&mulai=' + mulai + '&selesai=' + selesai;
-    if (proyek_id) {
-        url += '&proyek_id=' + proyek_id;
-    }
-    
-    window.location.href = url;
-});
-
 </script>
 
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>
-

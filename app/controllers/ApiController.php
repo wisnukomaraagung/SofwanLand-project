@@ -237,6 +237,84 @@ class ApiController {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+
+    // ==================== CRUD KARYAWAN ====================
+
+public function getKaryawan() {
+    header('Content-Type: application/json');
+    try {
+        $id = $_GET['id'] ?? null;
+        if ($id) {
+            $query = "SELECT * FROM karyawan WHERE id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([$id]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($data) {
+                echo json_encode(['success' => true, 'data' => $data]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Karyawan tidak ditemukan']);
+            }
+        } else {
+            $query = "SELECT * FROM karyawan ORDER BY id DESC";
+            $stmt = $this->db->query($query);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $data]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+public function updateKaryawan() {
+    header('Content-Type: application/json');
+    try {
+        $id = $_POST['id'] ?? null;
+        $nik = $_POST['nik'] ?? '';
+        $nama = $_POST['nama'] ?? '';
+        $jabatan = $_POST['jabatan'] ?? '';
+        $gaji_pokok = $_POST['gaji_pokok'] ?? 5000000;
+        
+        if (!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID karyawan tidak ditemukan']);
+            return;
+        }
+        
+        $query = "UPDATE karyawan SET nik = ?, nama = ?, jabatan = ?, gaji_pokok = ? WHERE id = ?";
+        $stmt = $this->db->prepare($query);
+        if ($stmt->execute([$nik, $nama, $jabatan, $gaji_pokok, $id])) {
+            echo json_encode(['success' => true, 'message' => 'Karyawan berhasil diupdate']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal mengupdate karyawan']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+public function deleteKaryawan() {
+    header('Content-Type: application/json');
+    try {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID karyawan tidak ditemukan']);
+            return;
+        }
+        
+        // Hapus data absensi terkait terlebih dahulu
+        $deleteAbsensi = $this->db->prepare("DELETE FROM absensi WHERE id_karyawan = ?");
+        $deleteAbsensi->execute([$id]);
+        
+        $query = "DELETE FROM karyawan WHERE id = ?";
+        $stmt = $this->db->prepare($query);
+        if ($stmt->execute([$id])) {
+            echo json_encode(['success' => true, 'message' => 'Karyawan berhasil dihapus']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal menghapus karyawan']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
     
     public function exportExcel() {
         try {
