@@ -100,6 +100,7 @@ if (isset($routes[$page])) {
     elseif ($action === 'editKeluar')   $controller->editKeluar((int)$id);
     elseif ($action === 'updateKeluar') $controller->updateKeluar((int)$id);
     elseif ($action === 'deleteKeluar') $controller->deleteKeluar((int)$id);
+    elseif ($action === 'viewBukti')   $controller->viewBukti();
     else                                $controller->index();
 } else {
     http_response_code(404);

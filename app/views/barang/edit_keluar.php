@@ -47,7 +47,7 @@
                     <?php if (!empty($keluar['foto_bukti'])): ?>
                         <div style="margin-top:10px;">
                             <img src="<?= BASE_URL ?>/public/<?= htmlspecialchars($keluar['foto_bukti']) ?>" style="max-height:120px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid var(--border);"><br>
-                            <a href="<?= BASE_URL ?>/public/<?= htmlspecialchars($keluar['foto_bukti']) ?>" target="_blank" class="btn btn-secondary btn-sm" style="font-size:11px; padding: 4px 8px; margin-top:5px; display:inline-block; text-decoration:none; color:var(--text-dark);">📄 Lihat Bukti Penuh</a>
+                            <a href="<?= htmlspecialchars(BarangController::buktiViewUrl($keluar['foto_bukti'], 'keluar', BASE_URL . '/public/index.php?page=barang&action=editKeluar&id=' . (int)$keluar['id'])) ?>" class="btn btn-secondary btn-sm" style="font-size:11px; padding: 4px 8px; margin-top:5px; display:inline-block; text-decoration:none; color:var(--text-dark);">📄 Lihat Bukti Penuh</a>
                         </div>
                     <?php endif; ?>
                 </div>

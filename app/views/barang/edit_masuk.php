@@ -42,7 +42,7 @@
                     <?php if (!empty($masuk['foto_kuitansi'])): ?>
                         <div style="margin-top:10px;">
                             <img src="<?= BASE_URL ?>/public/<?= htmlspecialchars($masuk['foto_kuitansi']) ?>" style="max-height:120px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid var(--border);"><br>
-                            <a href="<?= BASE_URL ?>/public/<?= htmlspecialchars($masuk['foto_kuitansi']) ?>" target="_blank" class="btn btn-secondary btn-sm" style="font-size:11px; padding: 4px 8px; margin-top:5px; display:inline-block; text-decoration:none; color:var(--text-dark);">📄 Lihat Kuitansi Penuh</a>
+                            <a href="<?= htmlspecialchars(BarangController::buktiViewUrl($masuk['foto_kuitansi'], 'masuk', BASE_URL . '/public/index.php?page=barang&action=editMasuk&id=' . (int)$masuk['id'])) ?>" class="btn btn-secondary btn-sm" style="font-size:11px; padding: 4px 8px; margin-top:5px; display:inline-block; text-decoration:none; color:var(--text-dark);">📄 Lihat Kuitansi Penuh</a>
                         </div>
                     <?php endif; ?>
                 </div>
