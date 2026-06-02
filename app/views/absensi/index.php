@@ -1,563 +1,439 @@
 <?php require BASE_PATH . '/app/views/layouts/header.php'; ?>
 
 <style>
-    /* Warna Putih Abu-Abu */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+/* Style untuk daftar proyek */
+.proyek-table {
+    width: 100%;
+}
 
-    body {
-        background: #f5f5f5;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+.proyek-row {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
 
-    .dashboard-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 20px;
-    }
+.proyek-row:hover {
+    background: #f8f9fa;
+    transform: scale(1.01);
+}
 
-    .dashboard-header h1 {
-        font-size: 28px;
-        color: #333;
-        margin-bottom: 5px;
-    }
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    display: inline-block;
+}
 
-    .dashboard-header p {
-        color: #666;
-        font-size: 14px;
-    }
+.status-aktif {
+    background: #e8f5e9;
+    color: #4CAF50;
+}
 
-    .nav-menu {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-        border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 10px;
-    }
+.status-selesai {
+    background: #f5f5f5;
+    color: #9E9E9E;
+}
 
-    .nav-item {
-        padding: 10px 20px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 500;
-        color: #666;
-        transition: all 0.3s;
-        border-radius: 8px;
-    }
+.progress-bar-mini {
+    width: 80px;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+}
 
-    .nav-item:hover {
-        background: #e0e0e0;
-        color: #333;
-    }
+.progress-fill-mini {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 3px;
+}
 
-    .nav-item.active {
-        background: #607d8b;
-        color: white;
-    }
+.proyek-detail-container {
+    display: none;
+}
 
-    .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 25px;
-        margin-bottom: 30px;
-    }
+.proyek-detail-container.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
 
-    .card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-    .card-header {
-        padding: 20px 24px;
-        border-bottom: 1px solid #e0e0e0;
-        font-weight: 600;
-        font-size: 18px;
-        color: #333;
-        background: #fafafa;
-    }
+.btn-back {
+    background: none;
+    border: none;
+    color: #667eea;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
 
-    .card-body {
-        padding: 24px;
-    }
+.tab-absensi {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+}
 
-    .video-container {
-        position: relative;
-        display: flex;
-        justify-content: center;
-        margin-bottom: 20px;
-        background: #333;
-        border-radius: 12px;
-        overflow: hidden;
-    }
+.tab-absensi-btn {
+    padding: 8px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.3s;
+}
 
-    #video, #regis-video {
-        width: 100%;
-        max-width: 500px;
-        background: #333;
-        border-radius: 12px;
-    }
+.tab-absensi-btn.active {
+    color: #667eea;
+    border-bottom: 2px solid #667eea;
+}
 
-    #overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-    }
+.tab-pane {
+    display: none;
+}
 
-    .scanning-status {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        right: 20px;
-        background: rgba(0,0,0,0.8);
-        color: white;
-        padding: 10px;
-        border-radius: 8px;
-        text-align: center;
-        font-size: 14px;
-        z-index: 10;
-    }
+.tab-pane.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
 
-    .btn-camera {
-        background: #607d8b;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        margin: 5px;
-        font-size: 14px;
-        font-weight: 500;
-        transition: all 0.3s;
-    }
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+}
 
-    .btn-camera:hover {
-        background: #455a64;
-    }
+.stat-number {
+    font-size: 28px;
+    font-weight: bold;
+}
 
-    .btn-camera-stop {
-        background: #9e9e9e;
-    }
+.stat-label {
+    font-size: 11px;
+    opacity: 0.9;
+    margin-top: 5px;
+}
 
-    .btn-camera-stop:hover {
-        background: #757575;
-    }
+.btn-camera {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
 
-    .btn-success {
-        background: #4caf50;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
+.btn-camera-stop {
+    background: #dc3545;
+}
 
-    .btn-danger {
-        background: #f44336;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
+.btn-manual {
+    background: #ff9800;
+}
 
-    .status-card {
-        background: #fafafa;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-    }
+.detected-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 15px;
+    animation: slideIn 0.5s ease;
+}
 
-    .status-card h3 {
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 10px;
-    }
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-    .status-card .status-value {
-        font-size: 24px;
-        font-weight: bold;
-        color: #333;
-    }
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-    .status-card.hadir {
-        border-left: 4px solid #4caf50;
-    }
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    padding: 20px;
+}
 
-    .status-card.belum {
-        border-left: 4px solid #ff9800;
-    }
+.modal-header {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
 
-    .weather-widget {
-        background: #fafafa;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        padding: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+.close {
+    float: right;
+    cursor: pointer;
+    font-size: 24px;
+}
 
-    .weather-temp {
-        font-size: 48px;
-        font-weight: bold;
-        color: #333;
-    }
+.form-group {
+    margin-bottom: 15px;
+}
 
-    .weather-info {
-        text-align: right;
-        color: #666;
-    }
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
 
-    .weather-icon {
-        font-size: 48px;
-    }
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
 
-    .table-wrap {
-        overflow-x: auto;
-    }
+.status-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
 
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
 
-    .table th,
-    .table td {
-        padding: 12px;
-        text-align: left;
-        border-bottom: 1px solid #e0e0e0;
-    }
+.status-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
 
-    .table th {
-        background: #fafafa;
-        font-weight: 600;
-        color: #555;
-    }
+.badge-selesai {
+    background: #d4edda;
+    color: #155724;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
 
-    .badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 500;
-    }
+.badge-pending {
+    background: #fff3cd;
+    color: #856404;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
 
-    .badge-selesai {
-        background: #e8f5e9;
-        color: #2e7d32;
-    }
+.btn-edit-keluar {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+}
 
-    .badge-warning {
-        background: #fff3e0;
-        color: #ef6c00;
-    }
-
-    .badge-danger {
-        background: #ffebee;
-        color: #c62828;
-    }
-
-    .text-right {
-        text-align: right;
-    }
-
-    .mt-4 {
-        margin-top: 20px;
-    }
-
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .modal-content {
-        background: white;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 500px;
-        padding: 24px;
-    }
-
-    .modal-header {
-        font-size: 20px;
-        font-weight: bold;
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #e0e0e0;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        color: #333;
-        font-weight: 500;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-    }
-
-    @media (max-width: 768px) {
-        .grid-2 {
-            grid-template-columns: 1fr;
-        }
-    }
+.btn-edit-keluar:hover {
+    background: #f57c00;
+}
 </style>
 
-<div class="dashboard-container">
-    <div class="dashboard-header">
-        <h1>📋 Absensi</h1>
-        <p>Catatan kehadiran karyawan per proyek</p>
+<!-- HALAMAN DAFTAR PROYEK -->
+<div id="daftar-proyek-container">
+    <div class="page-header">
+        <h1>🏗️ Absensi Face Recognition</h1>
+        <p class="text-muted">Pilih proyek untuk memulai absensi</p>
     </div>
-
-    <div class="nav-menu">
-        <button class="nav-item active" data-page="absensi">📸 ABSEN WAJAH</button>
-        <button class="nav-item" data-page="karyawan">👥 DAFTAR KARYAWAN</button>
-        <button class="nav-item" data-page="rekap">📊 REKAP ABSENSI</button>
-        <button class="nav-item" data-page="gaji">💰 REKAP GAJI</button>
-    </div>
-
-    <div id="page-content">
-        <!-- Halaman Absensi -->
-        <div id="absensi-page">
-            <div class="grid-2">
-                <div class="card">
-                    <div class="card-header">📸 Scan Wajah Absensi</div>
-                    <div class="card-body">
-                        <div class="video-container">
-                            <video id="video" autoplay muted playsinline></video>
-                            <canvas id="overlay"></canvas>
-                            <div id="scanning-status" class="scanning-status">🟡 Siap. Klik Mulai Kamera</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <button type="button" id="start-camera-btn" class="btn-camera">🎥 Mulai Kamera</button>
-                            <button type="button" id="stop-camera-btn" class="btn-camera btn-camera-stop">⏹️ Stop Kamera</button>
-                        </div>
-                        <div id="detected-info" style="display: none; margin-top: 20px;">
-                            <div style="background: #e8f5e9; padding: 15px; border-radius: 12px;">
-                                <div style="display: flex; align-items: center; gap: 15px;">
-                                    <div style="font-size: 48px;">👤</div>
-                                    <div>
-                                        <h4 id="detected-name" style="margin: 0;">-</h4>
-                                        <p id="detected-position" style="margin: 5px 0 0; color: #666;">-</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="absensi-form" style="display: none; margin-top: 20px;">
-                            <input type="hidden" id="recognized-id">
-                            <input type="hidden" id="face-snapshot-data">
-                            <select id="id_proyek" class="form-control" style="margin-bottom: 10px;">
-                                <option value="">-- Pilih Proyek --</option>
-                                <?php foreach ($proyekList as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nama_proyek']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <button type="button" id="btn-masuk" class="btn-camera" style="flex:1;">📥 Absen Masuk</button>
-                                <button type="button" id="btn-keluar" class="btn-camera" style="flex:1; background:#ff9800;">📤 Absen Keluar</button>
-                            </div>
-                            <button type="button" id="submit-absen" class="btn-camera" style="width:100%;">✅ Konfirmasi Absen</button>
-                        </div>
-                        <div id="status-message" style="margin-top: 15px; padding: 10px; border-radius: 8px; display: none;"></div>
-                    </div>
-                </div>
-                
-                <div>
-                    <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-header">📊 Status Absen Hari Ini</div>
-                        <div class="card-body">
-                            <div class="status-card hadir" style="margin-bottom: 15px;">
-                                <h3>Total Hadir Hari Ini</h3>
-                                <div class="status-value" id="hadir-count">0</div>
-                            </div>
-                            <div class="status-card belum">
-                                <h3>Status Anda</h3>
-                                <div class="status-value" id="my-status">Belum Absen</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="weather-widget">
-                        <div>
-                            <div class="weather-temp">23°C</div>
-                            <div>Cerah</div>
-                        </div>
-                        <div class="weather-info">
-                            <div class="weather-icon">☀️</div>
-                            <div id="current-time">--:--</div>
-                            <div id="current-date">--/--/----</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card mt-4">
-                <div class="card-header">📋 Daftar Absensi Hari Ini</div>
-                <div class="table-wrap">
-                    <table class="table">
-                        <thead>
-                            <tr><th>No</th><th>Nama</th><th>Jabatan</th><th>Proyek</th><th>Jam Masuk</th><th>Jam Keluar</th><th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="absensi-today-body">
-                            <tr><td colspan="7" style="text-align:center">Loading...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-<!-- Halaman Karyawan -->
-<div id="karyawan-page" style="display: none;">
     <div class="card">
-        <div class="card-header">
-            👥 Daftar Karyawan
-            <button onclick="showTambahKaryawan()" style="float:right; background:#607d8b; color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;">+ Tambah</button>
-        </div>
         <div class="table-wrap">
-            <table class="table">
+            <table class="table proyek-table">
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>NIK</th>
-                        <th>Nama</th>
-                        <th>Jabatan</th>
-                        <th>Gaji Pokok</th>
-                        <th>Status Wajah</th>
-                        <th>Aksi</th>
-                    </tr>
+                    <tr><th>#</th><th>NAMA PROYEK</th><th>LOKASI</th><th>PERIODE</th><th>STATUS</th><th>PROGRESS</th><th>NILAI KONTRAK</th><th>TOTAL BIAYA</th></tr>
                 </thead>
-                <tbody id="karyawan-body">
-                    <?php if (!empty($karyawanList) && is_array($karyawanList)): ?>
-                        <?php foreach ($karyawanList as $k): ?>
-                        <tr>
-                            <td><?= $k['id'] ?? '' ?></td>
-                            <td><?= htmlspecialchars($k['nik'] ?? '-') ?></td>
-                            <td><?= htmlspecialchars($k['nama'] ?? '-') ?></td>
-                            <td><?= htmlspecialchars($k['jabatan'] ?? '-') ?></td>
-                            <td>Rp <?= number_format($k['gaji_pokok'] ?? 0, 0, ',', '.') ?></td>
-                            <td><?= !empty($k['face_descriptor']) ? '✅ Terdaftar' : '❌ Belum' ?></td>
-                            <td>
-                                <button onclick="editKaryawan(<?= $k['id'] ?>)" class="btn-aksi" style="background:#607d8b; color:white; padding:5px 12px; margin:2px; border:none; border-radius:4px; cursor:pointer;">✏️ Edit</button>
-                                <button onclick="deleteKaryawan(<?= $k['id'] ?>)" class="btn-aksi" style="background:#9e9e9e; color:white; padding:5px 12px; margin:2px; border:none; border-radius:4px; cursor:pointer;">🗑️ Hapus</button>
-                                <button onclick="openRegistrasiWajah(<?= $k['id'] ?>)" class="btn-aksi" style="background:#455a64; color:white; padding:5px 12px; margin:2px; border:none; border-radius:4px; cursor:pointer;">📸 Registrasi Wajah</button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr><td colspan="7" style="text-align:center">Belum ada data karyawan</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td><td style="text-align:center">-</td></tr>
-                    <?php endif; ?>
+                <tbody id="proyek-tbody">
+                    <tr><td colspan="8" class="text-center">Loading proyek...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-        
-        <!-- Halaman Rekap Absensi -->
-        <div id="rekap-page" style="display: none;">
-            <div class="card">
-                <div class="card-header">📊 Rekap Absensi per Proyek (Bulan Ini)</div>
-                <div class="table-wrap">
-                    <table class="table">
-                        <thead>
-                            <tr><th>Proyek</th><th>Pekerja</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($rekapList)): ?>
-                                <?php foreach ($rekapList as $r): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($r['nama_proyek'] ?? '-') ?></td>
-                                    <td class="text-right"><?= $r['total_pekerja'] ?? 0 ?></td>
-                                    <td class="text-right"><?= $r['hadir'] ?? 0 ?></td>
-                                    <td class="text-right"><?= $r['izin'] ?? 0 ?></td>
-                                    <td class="text-right"><?= $r['sakit'] ?? 0 ?></td>
-                                    <td class="text-right"><?= $r['alpha'] ?? 0 ?></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr><td colspan="6" style="text-align:center">Belum ada data</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+
+<!-- HALAMAN DETAIL PROYEK -->
+<div id="detail-container" class="proyek-detail-container">
+    <div class="page-header">
+        <button class="btn-back" onclick="kembaliKeDaftar()">← Kembali ke Daftar Proyek</button>
+        <h1 id="detail-nama-proyek">-</h1>
+        <p id="detail-lokasi">-</p>
+    </div>
+
+    <div class="grid-3" style="margin-bottom: 24px;">
+        <div class="stat-card"><div class="stat-number" id="stat-karyawan">0</div><div class="stat-label">Karyawan</div></div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="stat-number" id="stat-hadir">0</div><div class="stat-label">Hadir Bulan Ini</div></div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="stat-number" id="stat-gaji">Rp 0</div><div class="stat-label">Total Gaji Bulan Ini</div></div>
+    </div>
+
+    <div class="tab-absensi">
+        <button class="tab-absensi-btn active" data-tab="karyawan">👥 Daftar Karyawan</button>
+        <button class="tab-absensi-btn" data-tab="absensi">📋 Riwayat Absensi</button>
+        <button class="tab-absensi-btn" data-tab="face">🎯 Face Recognition Absen</button>
+    </div>
+
+    <!-- Tab Karyawan -->
+    <div id="tab-karyawan" class="tab-pane active">
+        <div class="card">
+            <div class="card-header">
+                <span>👥 Daftar Karyawan</span>
+                <button class="btn btn-primary btn-sm" onclick="openTambahKaryawan()">+ Tambah Karyawan</button>
+            </div>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>#</th><th>NIK</th><th>Nama</th><th>Jabatan</th><th>Gaji Pokok</th><th>Status Wajah</th><th>Aksi</th></tr></thead>
+                    <tbody id="karyawan-tbody"><tr><td colspan="7" class="text-center">Loading...</td></tr></tbody>
+                </table>
             </div>
         </div>
-        
-        <!-- Halaman Rekap Gaji -->
-        <div id="gaji-page" style="display: none;">
-            <div class="card">
-                <div class="card-header">💰 Rekap Gaji Karyawan (Bulan Ini)</div>
-                <div class="table-wrap">
-                    <table class="table">
-                        <thead>
-                            <tr><th>No</th><th>Nama</th><th>Jabatan</th><th>Hadir</th><th>Lembur</th><th>Total Gaji</th>
-                            </tr>
-                        </thead>
-                        <tbody id="gaji-body">
-                            <tr><td colspan="6" style="text-align:center">Loading...</td></tr>
-                        </tbody>
-                    </table>
+    </div>
+
+    <!-- Tab Riwayat Absensi (ADMIN bisa edit jam keluar) -->
+    <div id="tab-absensi" class="tab-pane">
+        <div class="card">
+            <div class="card-header">
+                <span>📋 Riwayat Absensi</span>
+                <button class="btn btn-secondary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
+            </div>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Tanggal</th><th>Karyawan</th><th>Jam Masuk</th><th>Jam Keluar</th><th>Lembur</th><th>Status</th><th>Aksi</th></tr></thead>
+                    <tbody id="absensi-tbody"><tr><td colspan="7" class="text-center">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Face Recognition Absen (Hanya Absen Masuk) -->
+    <div id="tab-face" class="tab-pane">
+        <div class="card">
+            <div class="card-header">
+                <span>🎯 Face Recognition Absen</span>
+                <span style="font-size: 12px; margin-left: 15px;">✅ Absen Masuk (Otomatis/Manual) | ⚠️ Absen Keluar hanya oleh ADMIN</span>
+            </div>
+            <div class="card-body">
+                <input type="hidden" id="current-proyek-id" value="">
+                
+                <div style="position: relative; display: flex; justify-content: center; margin-bottom: 20px;">
+                    <div style="position: relative;">
+                        <video id="video" autoplay muted playsinline style="width: 100%; max-width: 500px; border-radius: 12px; background: #000;"></video>
+                        <canvas id="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                        <div id="scan-status" style="position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 8px; border-radius: 8px; text-align: center; font-size: 12px;">🔄 Menyiapkan...</div>
+                    </div>
                 </div>
+                
+                <div style="text-align: center;">
+                    <button id="start-camera" class="btn-camera">🎥 Mulai Kamera</button>
+                    <button id="stop-camera" class="btn-camera btn-camera-stop">⏹️ Stop Kamera</button>
+                </div>
+                
+                <div id="detected-info" style="display: none; margin-top: 20px;">
+                    <div class="detected-card">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="font-size: 40px;">👤</span>
+                            <div><h3 id="detected-name" style="margin: 0;">-</h3><p id="detected-position" style="margin: 5px 0 0;">-</p></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="absen-form" style="display: none; margin-top: 20px;">
+                    <input type="hidden" id="karyawan-id">
+                    <input type="hidden" id="face-snapshot">
+                    
+                    <div class="form-group">
+                        <label>⏰ Absen Masuk</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" id="btn-manual-masuk" class="btn-camera btn-manual" style="flex:1;">📥 Absen Masuk MANUAL</button>
+                        </div>
+                        <small>✅ Atau biarkan wajah terdeteksi untuk ABSEN OTOMATIS</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📋 Status</label>
+                        <select id="status" class="form-control">
+                            <option value="hadir">Hadir</option>
+                            <option value="izin">Izin</option>
+                            <option value="sakit">Sakit</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📝 Keterangan</label>
+                        <textarea id="keterangan" rows="2" class="form-control" placeholder="Contoh: Terlambat..."></textarea>
+                    </div>
+                    
+                    <button id="submit-absen" class="btn btn-primary" style="width: 100%;" disabled>📥 Konfirmasi Absen Masuk</button>
+                </div>
+                
+                <div id="status-message" style="margin-top: 15px; padding: 10px; border-radius: 8px; display: none;"></div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Modal Tambah Karyawan -->
-<div id="modalKaryawan" class="modal">
+<div id="modal-karyawan" class="modal" style="display: none;">
     <div class="modal-content">
-        <div class="modal-header">Tambah Karyawan</div>
-        <form id="formTambahKaryawan">
-            <div class="form-group"><label>NIK</label><input type="text" name="nik" class="form-control" required></div>
-            <div class="form-group"><label>Nama</label><input type="text" name="nama" class="form-control" required></div>
-            <div class="form-group"><label>Jabatan</label><input type="text" name="jabatan" class="form-control" required></div>
-            <div class="form-group"><label>Gaji Pokok</label><input type="number" name="gaji_pokok" class="form-control" value="5000000"></div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="closeModal()" class="btn-camera-stop">Batal</button>
-                <button type="submit" class="btn-camera">Simpan</button>
-            </div>
+        <div class="modal-header"><span>➕ Tambah Karyawan</span><span class="close" onclick="closeModal()">&times;</span></div>
+        <form id="form-karyawan">
+            <div class="form-group"><label>NIK</label><input type="text" id="nik" class="form-control" required></div>
+            <div class="form-group"><label>Nama</label><input type="text" id="nama" class="form-control" required></div>
+            <div class="form-group"><label>Jabatan</label><input type="text" id="jabatan" class="form-control" required></div>
+            <div class="form-group"><label>Gaji Pokok</label><input type="number" id="gaji_pokok" class="form-control" value="5000000"></div>
+            <div class="form-group"><label>No Telepon</label><input type="text" id="no_telp" class="form-control"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%">Simpan</button>
         </form>
     </div>
 </div>
 
-<!-- Modal Registrasi Wajah -->
-<div id="modalRegistrasi" class="modal">
+<!-- Modal Edit Absen Keluar (Admin) -->
+<div id="modal-edit-keluar" class="modal" style="display: none;">
     <div class="modal-content">
-        <div class="modal-header">📸 Registrasi Wajah</div>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <video id="regis-video" autoplay muted playsinline style="width:100%; max-width:400px; border-radius:12px; background:#333;"></video>
-        </div>
-        <p id="regis-status" style="text-align: center; margin: 10px 0; color: #666;">🟡 Arahkan wajah ke kamera</p>
-        <div style="display: flex; gap: 10px; justify-content: center;">
-            <button onclick="closeRegisModal()" class="btn-camera-stop">Batal</button>
-            <button onclick="ambilDanRegistrasiWajah()" class="btn-camera">📸 Ambil & Simpan</button>
+        <div class="modal-header"><span>✏️ Edit Absen Keluar</span><span class="close" onclick="closeEditModal()">&times;</span></div>
+        <form id="form-edit-keluar">
+            <input type="hidden" id="edit_id_absensi">
+            <div class="form-group"><label>Jam Keluar</label><input type="time" id="edit_jam_keluar" class="form-control" required></div>
+            <div class="form-group"><label>Lembur (jam)</label><input type="number" id="edit_lembur" step="0.5" class="form-control" value="0"></div>
+            <div class="form-group"><label>Status</label><select id="edit_status" class="form-control"><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option></select></div>
+            <div class="form-group"><label>Keterangan</label><textarea id="edit_keterangan" rows="2" class="form-control"></textarea></div>
+            <button type="submit" class="btn btn-primary" style="width:100%">💾 Simpan Perubahan</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Register Wajah -->
+<div id="modal-register-face" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header"><span>📸 Register Wajah</span><span class="close" onclick="closeModalRegister()">&times;</span></div>
+        <div class="modal-body">
+            <p>Karyawan: <strong id="register-nama"></strong></p>
+            <input type="hidden" id="register-karyawan-id">
+            <video id="register-video" autoplay muted playsinline style="width:100%; border-radius:8px;"></video>
+            <button id="capture-face" class="btn btn-primary" style="margin-top:15px; width:100%">📸 Ambil & Register Wajah</button>
         </div>
     </div>
 </div>
@@ -566,413 +442,398 @@
 
 <script>
 // ==================== VARIABLES ====================
+let currentProyekId = null;
 let video = document.getElementById('video');
 let overlay = document.getElementById('overlay');
-let scanningStatus = document.getElementById('scanning-status');
+let scanStatus = document.getElementById('scan-status');
 let stream = null;
 let detectionInterval = null;
 let modelsLoaded = false;
+let currentKaryawan = null;
+let registerStream = null;
+let registerVideo = null;
+let lastAutoAbsenTime = 0;
+const AUTO_ABSEN_COOLDOWN = 60000;
 
-let regisVideo = null;
-let regisStream = null;
-let currentRegisId = null;
-
-// Base URL untuk API
-const API_URL = '<?= BASE_URL ?>/public/index.php?page=api&action=';
-
-// ==================== NAVIGASI ====================
-document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function() {
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-        this.classList.add('active');
-        const page = this.dataset.page;
-        document.getElementById('absensi-page').style.display = page === 'absensi' ? 'block' : 'none';
-        document.getElementById('karyawan-page').style.display = page === 'karyawan' ? 'block' : 'none';
-        document.getElementById('rekap-page').style.display = page === 'rekap' ? 'block' : 'none';
-        document.getElementById('gaji-page').style.display = page === 'gaji' ? 'block' : 'none';
-        if (page === 'gaji') loadGajiData();
-    });
-});
-
-// ==================== WEATHER & TIME ====================
-function updateTime() {
-    const now = new Date();
-    document.getElementById('current-time').textContent = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-    document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID');
-}
-setInterval(updateTime, 1000);
-updateTime();
-
-// ==================== MODAL KARYAWAN ====================
-function showTambahKaryawan() {
-    document.getElementById('modalKaryawan').style.display = 'flex';
+// ==================== LOAD DAFTAR PROYEK ====================
+function loadProyek() {
+    fetch('<?= BASE_URL ?>/public/index.php?page=api&action=getAllProyek')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('proyek-tbody');
+            if (data.success && data.data && data.data.length > 0) {
+                tbody.innerHTML = data.data.map((p, i) => {
+                    let tglMulai = p.tanggal_mulai ? new Date(p.tanggal_mulai).toLocaleDateString('id-ID') : '-';
+                    let tglSelesai = p.tanggal_selesai ? new Date(p.tanggal_selesai).toLocaleDateString('id-ID') : '-';
+                    let statusClass = p.status == 'aktif' ? 'status-aktif' : 'status-selesai';
+                    return `<tr class="proyek-row" onclick="pilihProyek(${p.id})">
+                        <td>${i+1}</td><td><strong>${p.nama_proyek}</strong></td>
+                        <td>${(p.lokasi || '-').substring(0,40)}...</td>
+                        <td>${tglMulai} – ${tglSelesai}</td>
+                        <td><span class="status-badge ${statusClass}">${(p.status || 'AKTIF').toUpperCase()}</span></td>
+                        <td>${p.progress || 0}%</td>
+                        <td>Rp ${(p.nilai_kontrak || 0).toLocaleString('id-ID')}</td>
+                        <td>Rp ${(p.total_biaya || 0).toLocaleString('id-ID')}</td>
+                    </tr>`;
+                }).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+            }
+        }).catch(() => document.getElementById('proyek-tbody').innerHTML = '<tr><td colspan="8" class="text-center">Gagal memuat</td></tr>');
 }
 
-function closeModal() {
-    document.getElementById('modalKaryawan').style.display = 'none';
+// ==================== PILIH PROYEK ====================
+function pilihProyek(id) {
+    currentProyekId = id;
+    document.getElementById('current-proyek-id').value = id;
+    document.getElementById('daftar-proyek-container').style.display = 'none';
+    document.getElementById('detail-container').classList.add('active');
+    
+    fetch(`<?= BASE_URL ?>/public/index.php?page=api&action=getProyek&id=${id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('detail-nama-proyek').innerHTML = `🏗️ ${data.data.nama_proyek}`;
+                document.getElementById('detail-lokasi').innerHTML = `📍 ${data.data.lokasi || '-'}`;
+            }
+        });
+    
+    loadKaryawan(id);
+    loadAbsensi(id);
+    loadStatistik(id);
 }
 
-document.getElementById('formTambahKaryawan').addEventListener('submit', async (e) => {
+function kembaliKeDaftar() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    if (detectionInterval) clearInterval(detectionInterval);
+    document.getElementById('daftar-proyek-container').style.display = 'block';
+    document.getElementById('detail-container').classList.remove('active');
+}
+
+function loadKaryawan(proyekId) {
+    fetch(`<?= BASE_URL ?>/public/index.php?page=api&action=getKaryawanByProyek&id_proyek=${proyekId}`)
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('karyawan-tbody');
+            if (data.success && data.data && data.data.length > 0) {
+                tbody.innerHTML = data.data.map((k, i) => `
+                    <tr>
+                        <td>${i+1}</td><td>${k.nik}</td><td><strong>${k.nama}</strong></td>
+                        <td>${k.jabatan}</td><td>Rp ${(k.gaji_pokok || 5000000).toLocaleString('id-ID')}</td>
+                        <td>${k.face_descriptor ? '✅ Terdaftar' : '⚠️ Belum'}</td>
+                        <td>
+                            <button class="btn-edit-keluar" onclick="registerFace(${k.id}, '${k.nama}')">📸 Register</button>
+                            <button class="btn-edit-keluar" style="background:#dc3545;" onclick="hapusKaryawan(${k.id})">🗑️ Hapus</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Belum ada karyawan</td></tr>';
+            }
+        });
+}
+
+function loadAbsensi(proyekId) {
+    fetch(`<?= BASE_URL ?>/public/index.php?page=api&action=getAbsensiByProyek&id_proyek=${proyekId}&bulan_ini=1`)
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('absensi-tbody');
+            if (data.success && data.data && data.data.length > 0) {
+                tbody.innerHTML = data.data.map(a => {
+                    let statusClass = a.status == 'hadir' ? 'badge-selesai' : 'badge-pending';
+                    let isKeluarEmpty = !a.jam_keluar || a.jam_keluar == '00:00:00';
+                    return `
+                    <tr>
+                        <td>${new Date(a.tanggal).toLocaleDateString('id-ID')}</td>
+                        <td><strong>${a.nama_karyawan}</strong></td>
+                        <td>${a.jam_masuk || '-'}</td>
+                        <td>${a.jam_keluar || '<span class="badge-pending" style="background:#fff3cd;padding:2px 6px;">Belum absen keluar</span>'}</td>
+                        <td>${a.lembur_jam ? a.lembur_jam + ' jam' : '-'}</td>
+                        <td><span class="${statusClass}">${(a.status || 'hadir').toUpperCase()}</span></td>
+                        <td>
+                            ${isKeluarEmpty ? 
+                                `<button class="btn-edit-keluar" onclick="openEditKeluar(${a.id}, '${a.nama_karyawan}')">✏️ Input Absen Keluar</button>` : 
+                                `<button class="btn-edit-keluar" onclick="openEditKeluar(${a.id}, '${a.nama_karyawan}')">✏️ Edit Keluar</button>`
+                            }
+                        </td>
+                    </tr>
+                `}).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Belum ada data absensi</td></tr>';
+            }
+        });
+}
+
+function loadStatistik(proyekId) {
+    fetch(`<?= BASE_URL ?>/public/index.php?page=api&action=getStatistikProyek&id_proyek=${proyekId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('stat-karyawan').innerHTML = data.data.total_karyawan || 0;
+                document.getElementById('stat-hadir').innerHTML = data.data.total_hadir || 0;
+                document.getElementById('stat-gaji').innerHTML = 'Rp ' + (data.data.total_gaji || 0).toLocaleString('id-ID');
+            }
+        });
+}
+
+// ==================== CRUD KARYAWAN ====================
+function openTambahKaryawan() { document.getElementById('modal-karyawan').style.display = 'flex'; }
+function closeModal() { document.getElementById('modal-karyawan').style.display = 'none'; }
+
+document.getElementById('form-karyawan').addEventListener('submit', (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const response = await fetch(API_URL + 'addKaryawan', {
-        method: 'POST',
-        body: formData
-    });
-    const result = await response.json();
-    alert(result.message);
-    if (result.success) location.reload();
+    const formData = new FormData();
+    formData.append('nik', document.getElementById('nik').value);
+    formData.append('nama', document.getElementById('nama').value);
+    formData.append('jabatan', document.getElementById('jabatan').value);
+    formData.append('gaji_pokok', document.getElementById('gaji_pokok').value);
+    formData.append('no_telp', document.getElementById('no_telp').value);
+    formData.append('id_proyek', currentProyekId);
+    
+    fetch('<?= BASE_URL ?>/public/index.php?page=api&action=addKaryawan', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => { alert(data.message); if (data.success) { closeModal(); loadKaryawan(currentProyekId); loadStatistik(currentProyekId); } });
 });
 
-// ==================== MODAL REGISTRASI WAJAH ====================
-function openRegistrasiWajah(idKaryawan) {
-    currentRegisId = idKaryawan;
-    document.getElementById('modalRegistrasi').style.display = 'flex';
-    
-    setTimeout(async () => {
-        regisVideo = document.getElementById('regis-video');
-        try {
-            if (regisStream) regisStream.getTracks().forEach(t => t.stop());
-            regisStream = await navigator.mediaDevices.getUserMedia({ video: true });
-            regisVideo.srcObject = regisStream;
-            await regisVideo.play();
-            document.getElementById('regis-status').innerHTML = '🟢 Kamera aktif - Arahkan wajah ke kamera';
-            document.getElementById('regis-status').style.color = '#4caf50';
-        } catch(e) {
-            console.error(e);
-            document.getElementById('regis-status').innerHTML = '🔴 Gagal akses kamera';
-            document.getElementById('regis-status').style.color = '#f44336';
-        }
-    }, 500);
+function hapusKaryawan(id) {
+    if (confirm('Yakin hapus?')) {
+        fetch(`<?= BASE_URL ?>/public/index.php?page=api&action=deleteKaryawan&id=${id}`)
+            .then(res => res.json())
+            .then(data => { alert(data.message); if (data.success) { loadKaryawan(currentProyekId); loadStatistik(currentProyekId); } });
+    }
 }
 
-function closeRegisModal() {
-    if (regisStream) {
-        regisStream.getTracks().forEach(t => t.stop());
-        regisStream = null;
-    }
-    document.getElementById('modalRegistrasi').style.display = 'none';
-    currentRegisId = null;
+// ==================== EDIT ABSEN KELUAR (ADMIN) ====================
+let currentEditId = null;
+
+function openEditKeluar(id, nama) {
+    currentEditId = id;
+    document.getElementById('edit_id_absensi').value = id;
+    document.getElementById('modal-edit-keluar').style.display = 'flex';
+    document.querySelector('#modal-edit-keluar .modal-header span:first-child').innerHTML = `✏️ Edit Absen Keluar - ${nama}`;
 }
 
-async function ambilDanRegistrasiWajah() {
-    if (!regisVideo || !regisVideo.videoWidth) {
-        alert('Kamera belum siap, tunggu sebentar');
-        return;
-    }
+function closeEditModal() { document.getElementById('modal-edit-keluar').style.display = 'none'; }
+
+document.getElementById('form-edit-keluar').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('id', document.getElementById('edit_id_absensi').value);
+    formData.append('jam_keluar', document.getElementById('edit_jam_keluar').value);
+    formData.append('lembur_jam', document.getElementById('edit_lembur').value);
+    formData.append('status', document.getElementById('edit_status').value);
+    formData.append('keterangan', document.getElementById('edit_keterangan').value);
     
-    document.getElementById('regis-status').innerHTML = '🟡 Memproses deteksi wajah...';
+    const submitBtn = document.querySelector('#form-edit-keluar button');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Menyimpan...';
     
     try {
-        const detections = await faceapi.detectAllFaces(regisVideo, new faceapi.TinyFaceDetectorOptions())
-            .withFaceLandmarks()
-            .withFaceDescriptors();
-        
-        if (detections.length === 0) {
-            alert('❌ Wajah tidak terdeteksi! Arahkan wajah ke kamera dengan posisi yang jelas');
-            document.getElementById('regis-status').innerHTML = '🔴 Wajah tidak terdeteksi, coba lagi';
-            document.getElementById('regis-status').style.color = '#f44336';
-            return;
-        }
-        
-        if (detections.length > 1) {
-            alert('⚠️ Terdeteksi lebih dari satu wajah, pastikan hanya wajah Anda yang terlihat');
-            return;
-        }
-        
-        const faceDescriptor = Array.from(detections[0].descriptor);
-        
-        const response = await fetch(API_URL + 'registerFace', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id_karyawan: currentRegisId, 
-                face_descriptor: faceDescriptor 
-            })
-        });
-        
+        const response = await fetch('<?= BASE_URL ?>/public/index.php?page=api&action=updateAbsensi', { method: 'POST', body: formData });
         const result = await response.json();
-        
+        alert(result.message);
         if (result.success) {
-            alert('✅ ' + result.message);
-            closeRegisModal();
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            alert('❌ ' + result.message);
-            document.getElementById('regis-status').innerHTML = '🔴 Registrasi gagal: ' + result.message;
+            closeEditModal();
+            loadAbsensi(currentProyekId);
+            loadStatistik(currentProyekId);
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('❌ Error: ' + error.message);
-        document.getElementById('regis-status').innerHTML = '🔴 Error: ' + error.message;
-    }
+    } catch (error) { alert('Error: ' + error.message); }
+    submitBtn.disabled = false;
+    submitBtn.textContent = '💾 Simpan Perubahan';
+});
+
+// ==================== REGISTER WAJAH ====================
+function registerFace(id, nama) {
+    document.getElementById('register-nama').innerHTML = nama;
+    document.getElementById('register-karyawan-id').value = id;
+    document.getElementById('modal-register-face').style.display = 'flex';
+    
+    if (registerStream) registerStream.getTracks().forEach(t => t.stop());
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => { registerStream = stream; registerVideo = document.getElementById('register-video'); registerVideo.srcObject = stream; registerVideo.play(); })
+        .catch(err => console.error(err));
 }
+
+function closeModalRegister() {
+    if (registerStream) { registerStream.getTracks().forEach(t => t.stop()); registerStream = null; }
+    document.getElementById('modal-register-face').style.display = 'none';
+}
+
+document.getElementById('capture-face').addEventListener('click', async () => {
+    const karyawanId = document.getElementById('register-karyawan-id').value;
+    const videoReg = document.getElementById('register-video');
+    if (!videoReg || !videoReg.videoWidth) { alert('Kamera belum siap'); return; }
+    
+    const detections = await faceapi.detectSingleFace(videoReg, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+    if (detections) {
+        const descriptor = Array.from(detections.descriptor);
+        fetch('<?= BASE_URL ?>/public/index.php?page=api&action=registerFace', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_karyawan: karyawanId, face_descriptor: descriptor })
+        }).then(res => res.json()).then(data => { alert(data.message); if (data.success) { closeModalRegister(); loadKaryawan(currentProyekId); } });
+    } else { alert('Wajah tidak terdeteksi!'); }
+});
 
 // ==================== FACE RECOGNITION MODELS ====================
 async function loadModels() {
-    scanningStatus.innerHTML = '🟡 Memuat model face recognition...';
-    try {
-        const modelUrl = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
-        
-        await Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl),
-            faceapi.nets.faceLandmark68Net.loadFromUri(modelUrl),
-            faceapi.nets.faceRecognitionNet.loadFromUri(modelUrl)
-        ]);
-        
-        modelsLoaded = true;
-        scanningStatus.innerHTML = '🟢 Model siap. Klik Mulai Kamera';
-        console.log('Models loaded successfully');
-    } catch (err) {
-        console.error('Error loading models:', err);
-        scanningStatus.innerHTML = '🔴 Gagal muat model: ' + err.message;
+    scanStatus.innerHTML = '📦 Memuat model...';
+    const modelUrls = ['https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/', 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'];
+    for (const url of modelUrls) {
+        try {
+            await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(url), faceapi.nets.faceLandmark68Net.loadFromUri(url), faceapi.nets.faceRecognitionNet.loadFromUri(url)]);
+            modelsLoaded = true; scanStatus.innerHTML = '✅ Model siap. Klik Mulai Kamera'; return;
+        } catch (err) { console.warn('Gagal dari:', url); }
     }
+    scanStatus.innerHTML = '❌ Gagal muat model';
 }
 
 // ==================== START CAMERA ====================
-document.getElementById('start-camera-btn').addEventListener('click', async () => {
-    if (!modelsLoaded) {
-        scanningStatus.innerHTML = '🟡 Tunggu model selesai dimuat...';
-        return;
-    }
-    
+document.getElementById('start-camera').addEventListener('click', async () => {
+    if (!modelsLoaded) { scanStatus.innerHTML = '⏳ Tunggu model...'; return; }
     try {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
-        
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { width: { ideal: 640 }, height: { ideal: 480 } } 
-        });
-        
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
         video.srcObject = stream;
-        
-        await new Promise((resolve) => {
-            video.onloadedmetadata = () => resolve();
-        });
-        
+        await new Promise(r => { video.onloadedmetadata = r; setTimeout(r, 2000); });
         await video.play();
-        
-        overlay.width = video.videoWidth;
-        overlay.height = video.videoHeight;
-        
-        scanningStatus.innerHTML = '🟢 Kamera aktif - Scan wajah...';
+        overlay.width = video.videoWidth; overlay.height = video.videoHeight;
+        scanStatus.innerHTML = '🟢 Kamera aktif - Scan wajah';
         startDetection();
     } catch (err) {
-        console.error('Camera error:', err);
-        scanningStatus.innerHTML = '🔴 Gagal akses kamera: ' + err.message;
+        let errorMsg = err.name === 'NotAllowedError' ? 'Izin kamera ditolak!' : err.message;
+        scanStatus.innerHTML = '❌ ' + errorMsg;
+        alert(errorMsg);
     }
 });
 
-document.getElementById('stop-camera-btn').addEventListener('click', () => {
+document.getElementById('stop-camera').addEventListener('click', () => {
     if (detectionInterval) clearInterval(detectionInterval);
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
-    }
-    scanningStatus.innerHTML = '🟡 Kamera dimatikan';
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null; }
+    scanStatus.innerHTML = '⏹️ Kamera dimatikan';
     document.getElementById('detected-info').style.display = 'none';
-    document.getElementById('absensi-form').style.display = 'none';
+    document.getElementById('absen-form').style.display = 'none';
 });
 
-// ==================== DETECTION LOOP ====================
 function startDetection() {
     if (detectionInterval) clearInterval(detectionInterval);
-    
     detectionInterval = setInterval(async () => {
         if (!modelsLoaded || !stream || !video.videoWidth) return;
-        
-        try {
-            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-                .withFaceLandmarks()
-                .withFaceDescriptors();
-            
-            const ctx = overlay.getContext('2d');
-            ctx.clearRect(0, 0, overlay.width, overlay.height);
-            
-            if (detections.length > 0) {
-                const displaySize = { width: video.videoWidth, height: video.videoHeight };
-                const resized = faceapi.resizeResults(detections, displaySize);
-                faceapi.draw.drawDetections(overlay, resized);
-                
-                const faceDescriptor = Array.from(detections[0].descriptor);
-                await recognizeFace(faceDescriptor);
-                takeSnapshot();
-            } else {
-                document.getElementById('detected-info').style.display = 'none';
-                document.getElementById('absensi-form').style.display = 'none';
-            }
-        } catch (error) {
-            console.error('Detection error:', error);
+        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+        const ctx = overlay.getContext('2d'); ctx.clearRect(0, 0, overlay.width, overlay.height);
+        if (detections.length > 0) {
+            const resized = faceapi.resizeResults(detections, { width: video.videoWidth, height: video.videoHeight });
+            faceapi.draw.drawDetections(overlay, resized);
+            await recognizeFace(Array.from(detections[0].descriptor));
+            takeSnapshot();
         }
-    }, 1500);
+    }, 1000);
 }
 
-// ==================== RECOGNIZE FACE ====================
+// ==================== RECOGNIZE FACE & AUTO ABSEN MASUK ====================
 async function recognizeFace(faceDescriptor) {
     try {
-        const response = await fetch(API_URL + 'recognizeFace', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        const response = await fetch('<?= BASE_URL ?>/public/index.php?page=api&action=recognizeFace', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ face_descriptors: faceDescriptor })
         });
-        
         const result = await response.json();
-        
         if (result.success && result.karyawan) {
-            document.getElementById('detected-name').textContent = result.karyawan.nama;
-            document.getElementById('detected-position').textContent = result.karyawan.jabatan;
-            document.getElementById('recognized-id').value = result.karyawan.id;
+            currentKaryawan = result.karyawan;
+            document.getElementById('detected-name').innerHTML = result.karyawan.nama;
+            document.getElementById('detected-position').innerHTML = result.karyawan.jabatan;
+            document.getElementById('karyawan-id').value = result.karyawan.id;
             document.getElementById('detected-info').style.display = 'block';
-            document.getElementById('absensi-form').style.display = 'block';
-            scanningStatus.innerHTML = `✅ Dikenali: ${result.karyawan.nama}`;
+            document.getElementById('absen-form').style.display = 'block';
+            document.getElementById('submit-absen').disabled = false;
+            scanStatus.innerHTML = `✅ Dikenali: ${result.karyawan.nama}`;
+            await autoAbsenMasuk(result.karyawan.id);
+            takeSnapshot();
         }
-    } catch (error) {
-        console.error('Recognition error:', error);
-    }
+    } catch (error) { console.error(error); }
 }
 
-function takeSnapshot() {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    document.getElementById('face-snapshot-data').value = canvas.toDataURL('image/jpeg', 0.8);
-}
-
-// ==================== SUBMIT ABSEN ====================
-let currentAbsenType = 'masuk';
-
-document.getElementById('btn-masuk').addEventListener('click', () => { 
-    currentAbsenType = 'masuk'; 
-    showMessage('Pilih proyek lalu klik Konfirmasi', 'info');
-});
-
-document.getElementById('btn-keluar').addEventListener('click', () => { 
-    currentAbsenType = 'keluar'; 
-    showMessage('Pilih proyek lalu klik Konfirmasi', 'info');
-});
-
-document.getElementById('submit-absen').addEventListener('click', async () => {
-    const id_karyawan = document.getElementById('recognized-id').value;
-    const id_proyek = document.getElementById('id_proyek').value;
-    
-    if (!id_karyawan) { 
-        showMessage('Silakan scan wajah terlebih dahulu', 'error'); 
-        return; 
-    }
-    if (!id_proyek) { 
-        showMessage('Pilih proyek terlebih dahulu', 'error'); 
-        return; 
-    }
+// ==================== AUTO ABSEN MASUK (OTOMATIS) ====================
+async function autoAbsenMasuk(id_karyawan) {
+    const id_proyek = document.getElementById('current-proyek-id').value;
+    if (!id_proyek) { showMessage('Pilih proyek dulu', 'info'); return; }
+    const now = Date.now();
+    if (now - lastAutoAbsenTime < AUTO_ABSEN_COOLDOWN) return;
     
     const formData = new FormData();
     formData.append('id_karyawan', id_karyawan);
     formData.append('id_proyek', id_proyek);
-    formData.append('absensi_type', currentAbsenType);
-    formData.append('face_snapshot', document.getElementById('face-snapshot-data').value);
-    
-    const submitBtn = document.getElementById('submit-absen');
-    submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Memproses...';
+    formData.append('absensi_type', 'masuk');
+    formData.append('status', 'hadir');
+    formData.append('keterangan', 'Absen masuk otomatis');
+    formData.append('lembur_jam', 0);
+    formData.append('face_snapshot', document.getElementById('face-snapshot').value);
     
     try {
-        const response = await fetch(API_URL + 'storeAbsensi', { 
-            method: 'POST', 
-            body: formData 
-        });
+        const response = await fetch('<?= BASE_URL ?>/public/index.php?page=api&action=storeAbsensi', { method: 'POST', body: formData });
         const result = await response.json();
-        
-        if (result.success) { 
-            showMessage(result.message, 'success'); 
-            setTimeout(() => location.reload(), 1500);
-        } else { 
-            showMessage(result.message, 'error');
-            submitBtn.disabled = false;
-            submitBtn.textContent = '✅ Konfirmasi Absen';
-        }
-    } catch (error) {
-        showMessage('Error: ' + error.message, 'error');
-        submitBtn.disabled = false;
-        submitBtn.textContent = '✅ Konfirmasi Absen';
-    }
+        if (result.success) { lastAutoAbsenTime = now; showMessage('✅ Absen Masuk Otomatis Berhasil!', 'success'); loadStatistik(currentProyekId); loadAbsensi(currentProyekId); }
+        else if (!result.message.includes('sudah absen masuk')) console.log(result.message);
+    } catch (error) { console.error(error); }
+}
+
+// ==================== MANUAL ABSEN MASUK ====================
+document.getElementById('btn-manual-masuk').addEventListener('click', async () => {
+    const id_karyawan = document.getElementById('karyawan-id').value;
+    const id_proyek = document.getElementById('current-proyek-id').value;
+    if (!id_karyawan) { showMessage('Scan wajah dulu', 'error'); return; }
+    if (!id_proyek) { showMessage('Pilih proyek', 'error'); return; }
+    
+    const formData = new FormData();
+    formData.append('id_karyawan', id_karyawan);
+    formData.append('id_proyek', id_proyek);
+    formData.append('absensi_type', 'masuk');
+    formData.append('status', document.getElementById('status').value);
+    formData.append('keterangan', document.getElementById('keterangan').value || 'Absen masuk manual');
+    formData.append('lembur_jam', 0);
+    formData.append('face_snapshot', document.getElementById('face-snapshot').value);
+    
+    const btn = document.getElementById('submit-absen');
+    btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+    
+    try {
+        const response = await fetch('<?= BASE_URL ?>/public/index.php?page=api&action=storeAbsensi', { method: 'POST', body: formData });
+        const result = await response.json();
+        showMessage(result.message, result.success ? 'success' : 'error');
+        if (result.success) { loadStatistik(currentProyekId); loadAbsensi(currentProyekId); }
+        btn.disabled = false; btn.textContent = '📥 Konfirmasi Absen Masuk';
+    } catch (error) { showMessage('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = '📥 Konfirmasi Absen Masuk'; }
 });
+
+function takeSnapshot() {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    document.getElementById('face-snapshot').value = canvas.toDataURL('image/jpeg', 0.8);
+}
 
 function showMessage(msg, type) {
     const div = document.getElementById('status-message');
-    div.textContent = msg;
-    div.style.display = 'block';
-    div.style.background = type === 'success' ? '#e8f5e9' : type === 'error' ? '#ffebee' : '#e3f2fd';
-    div.style.color = type === 'success' ? '#2e7d32' : type === 'error' ? '#c62828' : '#1565c0';
-    div.style.padding = '10px';
-    div.style.borderRadius = '8px';
-    setTimeout(() => div.style.display = 'none', 3000);
+    div.textContent = msg; div.style.display = 'block';
+    div.className = type === 'success' ? 'status-success' : (type === 'error' ? 'status-error' : 'status-info');
+    setTimeout(() => div.style.display = 'none', 4000);
 }
 
-// ==================== LOAD DATA ====================
-async function loadTodayAbsensi() {
-    try {
-        const response = await fetch(API_URL + 'getTodayAbsensi');
-        const result = await response.json();
-        if (result.success) {
-            const tbody = document.getElementById('absensi-today-body');
-            tbody.innerHTML = '';
-            if (result.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Belum ada data absensi hari ini</td></tr>';
-            } else {
-                result.data.forEach((a, i) => {
-                    let statusBadge = '';
-                    if (a.status === 'hadir') statusBadge = 'badge-selesai';
-                    else if (a.status === 'izin') statusBadge = 'badge-warning';
-                    else statusBadge = 'badge-danger';
-                    
-                    tbody.innerHTML += `<tr>
-                        <td>${i+1}</td>
-                        <td>${a.nama_karyawan}</td>
-                        <td>${a.jabatan}</td>
-                        <td>${a.nama_proyek}</td>
-                        <td>${a.jam_masuk || '-'}</td>
-                        <td>${a.jam_keluar || '-'}</td>
-                        <td><span class="badge ${statusBadge}">${a.status.toUpperCase()}</span></td>
-                    </tr>`;
-                });
-            }
-            document.getElementById('hadir-count').textContent = result.data.filter(a => a.status === 'hadir').length;
-        }
-    } catch(e) { 
-        console.error(e);
-        document.getElementById('absensi-today-body').innerHTML = '<tr><td colspan="7" style="text-align:center">Gagal memuat data</td></tr>';
-    }
-}
+// ==================== TAB & EXPORT ====================
+document.querySelectorAll('.tab-absensi-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-absensi-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    });
+});
 
-async function loadGajiData() {
-    try {
-        const response = await fetch(API_URL + 'getRekapGaji');
-        const result = await response.json();
-        if (result.success) {
-            const tbody = document.getElementById('gaji-body');
-            tbody.innerHTML = '';
-            if (result.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Belum ada data gaji</tr>';
-            } else {
-                result.data.forEach((g, i) => {
-                    tbody.innerHTML += `<tr>
-                        <td>${i+1}</td>
-                        <td>${g.nama}</td>
-                        <td>${g.jabatan}</td>
-                        <td>${g.total_hadir} hari</td>
-                        <td>${g.total_lembur} jam</td>
-                        <td>Rp ${parseInt(g.total_gaji).toLocaleString('id-ID')}</td>
-                    </tr>`;
-                });
-            }
-        }
-    } catch(e) { console.error(e); }
-}
+function exportExcel() { window.location.href = `<?= BASE_URL ?>/public/index.php?page=api&action=exportExcel&proyek_id=${currentProyekId}`; }
 
 // ==================== INIT ====================
+loadProyek();
 loadModels();
-loadTodayAbsensi();
+window.onclick = (event) => { if (event.target.classList.contains('modal')) event.target.style.display = 'none'; }
 </script>
 
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>

@@ -10,6 +10,8 @@ class ApiController {
         $this->db = getDB();
     }
     
+    // ==================== ABSENSI ====================
+    
     public function getTodayAbsensi() {
         try {
             $query = "SELECT a.*, k.nama as nama_karyawan, k.jabatan, p.nama_proyek 
@@ -50,30 +52,7 @@ class ApiController {
         }
     }
     
-    public function addKaryawan() {
-        try {
-            $nik = $_POST['nik'] ?? '';
-            $nama = $_POST['nama'] ?? '';
-            $jabatan = $_POST['jabatan'] ?? '';
-            $gaji_pokok = $_POST['gaji_pokok'] ?? 5000000;
-            $no_telp = $_POST['no_telp'] ?? '';
-            
-            if (empty($nik) || empty($nama) || empty($jabatan)) {
-                echo json_encode(['success' => false, 'message' => 'Semua field harus diisi']);
-                return;
-            }
-            
-            $query = "INSERT INTO karyawan (nik, nama, jabatan, gaji_pokok, no_telp) VALUES (?, ?, ?, ?, ?)";
-            $stmt = $this->db->prepare($query);
-            if ($stmt->execute([$nik, $nama, $jabatan, $gaji_pokok, $no_telp])) {
-                echo json_encode(['success' => true, 'message' => 'Karyawan berhasil ditambahkan']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Gagal menambahkan karyawan']);
-            }
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
+    // ==================== FACE RECOGNITION ====================
     
     public function recognizeFace() {
         try {
@@ -161,13 +140,14 @@ class ApiController {
         }
     }
     
+    // ==================== STORE ABSENSI ====================
+    
     public function storeAbsensi() {
         try {
             $id_karyawan = $_POST['id_karyawan'] ?? null;
             $id_proyek = $_POST['id_proyek'] ?? null;
             $absensi_type = $_POST['absensi_type'] ?? 'masuk';
             $tanggal = date('Y-m-d');
-            // Gunakan waktu real saat ini, bukan dari input user
             $waktu = date('H:i:s');
             
             if (!$id_karyawan || !$id_proyek) {
@@ -213,14 +193,17 @@ class ApiController {
                     echo json_encode(['success' => false, 'message' => 'Anda sudah absen keluar hari ini pada jam ' . date('H:i:s', strtotime($existing['jam_keluar']))]);
                     return;
                 }
-                // Hitung lembur otomatis jika lebih dari jam 17:00
-                $lembur_jam = 0;
-                $jam_keluar_obj = new DateTime($waktu);
-                $jam_pulang_normal = new DateTime('17:00:00');
-                if ($jam_keluar_obj > $jam_pulang_normal) {
-                    $diff = $jam_keluar_obj->diff($jam_pulang_normal);
-                    $lembur_jam = $diff->h + ($diff->i / 60);
-                    $lembur_jam = round($lembur_jam, 1);
+                
+                // Hitung lembur
+                $lembur_jam = isset($_POST['lembur_jam']) ? floatval($_POST['lembur_jam']) : 0;
+                if ($lembur_jam == 0) {
+                    $jam_keluar_obj = new DateTime($waktu);
+                    $jam_pulang_normal = new DateTime('17:00:00');
+                    if ($jam_keluar_obj > $jam_pulang_normal) {
+                        $diff = $jam_keluar_obj->diff($jam_pulang_normal);
+                        $lembur_jam = $diff->h + ($diff->i / 60);
+                        $lembur_jam = round($lembur_jam, 1);
+                    }
                 }
                 
                 $query = "UPDATE absensi SET jam_keluar = ?, lembur_jam = ? WHERE id = ?";
@@ -237,193 +220,329 @@ class ApiController {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
-
+    
     // ==================== CRUD KARYAWAN ====================
-
-public function getKaryawan() {
-    header('Content-Type: application/json');
-    try {
-        $id = $_GET['id'] ?? null;
-        if ($id) {
-            $query = "SELECT * FROM karyawan WHERE id = ?";
+    
+    public function getKaryawan() {
+        header('Content-Type: application/json');
+        try {
+            $id = $_GET['id'] ?? null;
+            if ($id) {
+                $query = "SELECT * FROM karyawan WHERE id = ?";
+                $stmt = $this->db->prepare($query);
+                $stmt->execute([$id]);
+                $data = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($data) {
+                    echo json_encode(['success' => true, 'data' => $data]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Karyawan tidak ditemukan']);
+                }
+            } else {
+                $query = "SELECT * FROM karyawan ORDER BY id DESC";
+                $stmt = $this->db->query($query);
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode(['success' => true, 'data' => $data]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    public function addKaryawan() {
+        header('Content-Type: application/json');
+        try {
+            $nik = $_POST['nik'] ?? '';
+            $nama = $_POST['nama'] ?? '';
+            $jabatan = $_POST['jabatan'] ?? '';
+            $gaji_pokok = $_POST['gaji_pokok'] ?? 5000000;
+            $no_telp = $_POST['no_telp'] ?? '';
+            $id_proyek = $_POST['id_proyek'] ?? null;
+            
+            if (empty($nik) || empty($nama) || empty($jabatan)) {
+                echo json_encode(['success' => false, 'message' => 'NIK, Nama, dan Jabatan harus diisi']);
+                return;
+            }
+            
+            // Insert ke karyawan
+            $query = "INSERT INTO karyawan (nik, nama, jabatan, gaji_pokok, no_telp) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([$nik, $nama, $jabatan, $gaji_pokok, $no_telp]);
+            $karyawan_id = $this->db->lastInsertId();
+            
+            // Assign ke proyek jika ada proyek_id dan tabel proyek_karyawan ada
+            if ($id_proyek) {
+                $checkTable = $this->db->query("SHOW TABLES LIKE 'proyek_karyawan'");
+                if ($checkTable->rowCount() > 0) {
+                    $query2 = "INSERT INTO proyek_karyawan (id_proyek, id_karyawan) VALUES (?, ?)";
+                    $stmt2 = $this->db->prepare($query2);
+                    $stmt2->execute([$id_proyek, $karyawan_id]);
+                }
+            }
+            
+            echo json_encode(['success' => true, 'message' => 'Karyawan berhasil ditambahkan', 'id' => $karyawan_id]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    public function updateKaryawan() {
+        header('Content-Type: application/json');
+        try {
+            $id = $_POST['id'] ?? null;
+            $nik = $_POST['nik'] ?? '';
+            $nama = $_POST['nama'] ?? '';
+            $jabatan = $_POST['jabatan'] ?? '';
+            $gaji_pokok = $_POST['gaji_pokok'] ?? 5000000;
+            
+            if (!$id) {
+                echo json_encode(['success' => false, 'message' => 'ID karyawan tidak ditemukan']);
+                return;
+            }
+            
+            $query = "UPDATE karyawan SET nik = ?, nama = ?, jabatan = ?, gaji_pokok = ? WHERE id = ?";
+            $stmt = $this->db->prepare($query);
+            if ($stmt->execute([$nik, $nama, $jabatan, $gaji_pokok, $id])) {
+                echo json_encode(['success' => true, 'message' => 'Karyawan berhasil diupdate']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Gagal mengupdate karyawan']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    public function deleteKaryawan() {
+        header('Content-Type: application/json');
+        try {
+            $id = $_GET['id'] ?? null;
+            if (!$id) {
+                echo json_encode(['success' => false, 'message' => 'ID karyawan tidak ditemukan']);
+                return;
+            }
+            
+            // Hapus relasi di proyek_karyawan dulu
+            $checkTable = $this->db->query("SHOW TABLES LIKE 'proyek_karyawan'");
+            if ($checkTable->rowCount() > 0) {
+                $stmt = $this->db->prepare("DELETE FROM proyek_karyawan WHERE id_karyawan = ?");
+                $stmt->execute([$id]);
+            }
+            
+            // Hapus absensi terkait
+            $stmt = $this->db->prepare("DELETE FROM absensi WHERE id_karyawan = ?");
+            $stmt->execute([$id]);
+            
+            // Hapus karyawan
+            $query = "DELETE FROM karyawan WHERE id = ?";
             $stmt = $this->db->prepare($query);
             $stmt->execute([$id]);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($data) {
-                echo json_encode(['success' => true, 'data' => $data]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Karyawan tidak ditemukan']);
-            }
-        } else {
-            $query = "SELECT * FROM karyawan ORDER BY id DESC";
+            
+            echo json_encode(['success' => true, 'message' => 'Karyawan berhasil dihapus']);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    // ==================== PROYEK ====================
+    
+    public function getAllProyek() {
+        header('Content-Type: application/json');
+        try {
+            $query = "SELECT * FROM proyek ORDER BY FIELD(status, 'aktif', 'selesai'), id DESC";
             $stmt = $this->db->query($query);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-}
-
-public function updateKaryawan() {
-    header('Content-Type: application/json');
-    try {
-        $id = $_POST['id'] ?? null;
-        $nik = $_POST['nik'] ?? '';
-        $nama = $_POST['nama'] ?? '';
-        $jabatan = $_POST['jabatan'] ?? '';
-        $gaji_pokok = $_POST['gaji_pokok'] ?? 5000000;
-        
-        if (!$id) {
-            echo json_encode(['success' => false, 'message' => 'ID karyawan tidak ditemukan']);
-            return;
+    
+    public function getProyek() {
+        header('Content-Type: application/json');
+        try {
+            $id = $_GET['id'] ?? 0;
+            $query = "SELECT * FROM proyek WHERE id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([$id]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
-        
-        $query = "UPDATE karyawan SET nik = ?, nama = ?, jabatan = ?, gaji_pokok = ? WHERE id = ?";
-        $stmt = $this->db->prepare($query);
-        if ($stmt->execute([$nik, $nama, $jabatan, $gaji_pokok, $id])) {
-            echo json_encode(['success' => true, 'message' => 'Karyawan berhasil diupdate']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Gagal mengupdate karyawan']);
-        }
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-}
-
-public function deleteKaryawan() {
-    header('Content-Type: application/json');
-    try {
-        $id = $_GET['id'] ?? null;
-        if (!$id) {
-            echo json_encode(['success' => false, 'message' => 'ID karyawan tidak ditemukan']);
-            return;
+    
+    public function getKaryawanByProyek() {
+        header('Content-Type: application/json');
+        try {
+            $id_proyek = $_GET['id_proyek'] ?? 0;
+            
+            $checkTable = $this->db->query("SHOW TABLES LIKE 'proyek_karyawan'");
+            if ($checkTable->rowCount() > 0) {
+                $query = "SELECT k.* FROM karyawan k 
+                          JOIN proyek_karyawan pk ON k.id = pk.id_karyawan 
+                          WHERE pk.id_proyek = ?
+                          ORDER BY k.nama ASC";
+                $stmt = $this->db->prepare($query);
+                $stmt->execute([$id_proyek]);
+            } else {
+                $query = "SELECT * FROM karyawan ORDER BY nama ASC";
+                $stmt = $this->db->query($query);
+            }
+            
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
-        
-        // Hapus data absensi terkait terlebih dahulu
-        $deleteAbsensi = $this->db->prepare("DELETE FROM absensi WHERE id_karyawan = ?");
-        $deleteAbsensi->execute([$id]);
-        
-        $query = "DELETE FROM karyawan WHERE id = ?";
-        $stmt = $this->db->prepare($query);
-        if ($stmt->execute([$id])) {
-            echo json_encode(['success' => true, 'message' => 'Karyawan berhasil dihapus']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Gagal menghapus karyawan']);
-        }
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-}
+    
+    public function getAbsensiByProyek() {
+        header('Content-Type: application/json');
+        try {
+            $id_proyek = $_GET['id_proyek'] ?? 0;
+            $bulan_ini = isset($_GET['bulan_ini']);
+            
+            $query = "SELECT a.*, k.nama as nama_karyawan 
+                      FROM absensi a 
+                      JOIN karyawan k ON a.id_karyawan = k.id 
+                      WHERE a.id_proyek = ?";
+            
+            if ($bulan_ini) {
+                $query .= " AND MONTH(a.tanggal) = MONTH(CURDATE()) AND YEAR(a.tanggal) = YEAR(CURDATE())";
+            }
+            
+            $query .= " ORDER BY a.tanggal DESC, a.jam_masuk DESC";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([$id_proyek]);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    public function getStatistikProyek() {
+        header('Content-Type: application/json');
+        try {
+            $id_proyek = $_GET['id_proyek'] ?? 0;
+            
+            // Total karyawan
+            $checkTable = $this->db->query("SHOW TABLES LIKE 'proyek_karyawan'");
+            if ($checkTable->rowCount() > 0) {
+                $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM proyek_karyawan WHERE id_proyek = ?");
+                $stmt->execute([$id_proyek]);
+                $total_karyawan = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            } else {
+                $stmt = $this->db->query("SELECT COUNT(*) as total FROM karyawan");
+                $total_karyawan = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            }
+            
+            // Total hadir bulan ini
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as total FROM absensi 
+                WHERE id_proyek = ? AND status = 'hadir' 
+                AND MONTH(tanggal) = MONTH(CURDATE()) AND YEAR(tanggal) = YEAR(CURDATE())
+            ");
+            $stmt->execute([$id_proyek]);
+            $total_hadir = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            // Total gaji bulan ini
+            $stmt = $this->db->prepare("
+                SELECT SUM(
+                    COALESCE(TIMESTAMPDIFF(HOUR, jam_masuk, jam_keluar), 0) * (COALESCE(k.gaji_pokok, 5000000) / 30 / 8) +
+                    COALESCE(lembur_jam, 0) * (COALESCE(k.gaji_pokok, 5000000) / 30 / 8) * 1.5
+                ) as total
+                FROM absensi a
+                JOIN karyawan k ON a.id_karyawan = k.id
+                WHERE a.id_proyek = ? AND MONTH(a.tanggal) = MONTH(CURDATE()) AND YEAR(a.tanggal) = YEAR(CURDATE())
+            ");
+            $stmt->execute([$id_proyek]);
+            $total_gaji = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+            
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'total_karyawan' => (int)$total_karyawan,
+                    'total_hadir' => (int)$total_hadir,
+                    'total_gaji' => (float)$total_gaji
+                ]
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    // ==================== EXPORT EXCEL ====================
     
     public function exportExcel() {
         try {
-            $mulai = $_GET['mulai'] ?? date('Y-m-01');
-            $selesai = $_GET['selesai'] ?? date('Y-m-t');
-            $proyek_id = $_GET['proyek_id'] ?? null;
+            $proyek_id = $_GET['proyek_id'] ?? 0;
             
-            $query = "SELECT a.*, k.nik, k.nama as nama_karyawan, k.jabatan, k.gaji_pokok, p.nama_proyek 
+            // Get proyek info
+            $stmt = $this->db->prepare("SELECT * FROM proyek WHERE id = ?");
+            $stmt->execute([$proyek_id]);
+            $proyek = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Get absensi data
+            $query = "SELECT a.*, k.nik, k.nama as nama_karyawan, k.jabatan, k.gaji_pokok 
                       FROM absensi a
                       JOIN karyawan k ON a.id_karyawan = k.id
-                      JOIN proyek p ON a.id_proyek = p.id
-                      WHERE DATE(a.tanggal) BETWEEN ? AND ?";
-            $params = [$mulai, $selesai];
-            
-            if ($proyek_id) {
-                $query .= " AND a.id_proyek = ?";
-                $params[] = $proyek_id;
-            }
-            
-            $query .= " ORDER BY a.tanggal DESC, a.jam_masuk ASC";
-            
+                      WHERE a.id_proyek = ?
+                      ORDER BY a.tanggal DESC, a.jam_masuk ASC";
             $stmt = $this->db->prepare($query);
-            $stmt->execute($params);
+            $stmt->execute([$proyek_id]);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Set headers untuk download Excel
+            // Set headers untuk Excel
             header('Content-Type: application/vnd.ms-excel');
-            header('Content-Disposition: attachment; filename="absensi_' . date('Y-m-d') . '.xls"');
+            header('Content-Disposition: attachment; filename="absensi_' . ($proyek['nama_proyek'] ?? 'proyek') . '_' . date('Y-m-d') . '.xls"');
             
             echo '<table border="1">';
-            echo '<tr style="background:#f0f0f0;">';
+            echo '<tr style="background:#4472C4; color:white;">';
             echo '<th>No</th>';
             echo '<th>Tanggal</th>';
             echo '<th>NIK</th>';
             echo '<th>Nama Karyawan</th>';
             echo '<th>Jabatan</th>';
-            echo '<th>Proyek</th>';
             echo '<th>Jam Masuk</th>';
             echo '<th>Jam Keluar</th>';
-            echo '<th>Total Jam</th>';
             echo '<th>Lembur (Jam)</th>';
-            echo '<th>Gaji Pokok/Hari</th>';
-            echo '<th>Gaji Lembur</th>';
-            echo '<th>Total Gaji</th>';
             echo '<th>Status</th>';
             echo '<th>Keterangan</th>';
             echo '</tr>';
             
-            $total_gaji_keseluruhan = 0;
-            $total_lembur_keseluruhan = 0;
-            
+            $total_lembur = 0;
             foreach ($data as $i => $a) {
-                // Hitung total jam kerja
-                $total_jam = 0;
-                if ($a['jam_masuk'] && $a['jam_keluar']) {
-                    $masuk = strtotime($a['jam_masuk']);
-                    $keluar = strtotime($a['jam_keluar']);
-                    $total_jam = ($keluar - $masuk) / 3600;
-                }
-                
-                $gaji_per_jam = ($a['gaji_pokok'] ?? 5000000) / 30 / 8;
-                $gaji_normal = $total_jam * $gaji_per_jam;
-                $lembur_jam = floatval($a['lembur_jam'] ?? 0);
-                $gaji_lembur = $lembur_jam * $gaji_per_jam * 1.5;
-                $total_gaji = $gaji_normal + $gaji_lembur;
-                
-                $total_gaji_keseluruhan += $total_gaji;
-                $total_lembur_keseluruhan += $lembur_jam;
-                
-                $status_color = '';
-                if ($a['status'] == 'hadir') $status_color = '#d4edda';
-                elseif ($a['status'] == 'izin') $status_color = '#fff3cd';
-                elseif ($a['status'] == 'sakit') $status_color = '#cce5ff';
-                else $status_color = '#f8d7da';
-                
-                echo '<tr style="background:' . $status_color . ';">';
+                $total_lembur += floatval($a['lembur_jam'] ?? 0);
+                echo '<tr>';
                 echo '<td>' . ($i+1) . '</td>';
                 echo '<td>' . date('d/m/Y', strtotime($a['tanggal'])) . '</td>';
                 echo '<td>' . htmlspecialchars($a['nik'] ?? '-') . '</td>';
                 echo '<td>' . htmlspecialchars($a['nama_karyawan']) . '</td>';
                 echo '<td>' . htmlspecialchars($a['jabatan']) . '</td>';
-                echo '<td>' . htmlspecialchars($a['nama_proyek']) . '</td>';
                 echo '<td>' . ($a['jam_masuk'] ? date('H:i:s', strtotime($a['jam_masuk'])) : '-') . '</td>';
                 echo '<td>' . ($a['jam_keluar'] ? date('H:i:s', strtotime($a['jam_keluar'])) : '-') . '</td>';
-                echo '<td>' . number_format($total_jam, 1) . '</td>';
-                echo '<td>' . number_format($lembur_jam, 1) . '</td>';
-                echo '<td>Rp ' . number_format($gaji_per_jam * 8, 0, ',', '.') . '</td>';
-                echo '<td>Rp ' . number_format($gaji_lembur, 0, ',', '.') . '</td>';
-                echo '<td><strong>Rp ' . number_format($total_gaji, 0, ',', '.') . '</strong></td>';
+                echo '<td>' . number_format($a['lembur_jam'] ?? 0, 1) . '</td>';
                 echo '<td>' . strtoupper($a['status']) . '</td>';
                 echo '<td>' . htmlspecialchars($a['keterangan'] ?? '-') . '</td>';
                 echo '</tr>';
             }
             
-            // Baris Total
-            echo '<tr style="background:#e0e0e0; font-weight:bold;">';
-            echo '<td colspan="9" align="right">TOTAL</td>';
-            echo '<td>' . number_format($total_lembur_keseluruhan, 1) . ' jam</td>';
-            echo '<td colspan="2"></td>';
-            echo '<td>Rp ' . number_format($total_gaji_keseluruhan, 0, ',', '.') . '</td>';
+            echo '<tr style="background:#e0e0e0;">';
+            echo '<td colspan="7" align="right"><strong>Total Lembur</strong></td>';
+            echo '<td><strong>' . number_format($total_lembur, 1) . ' jam</strong></td>';
             echo '<td colspan="2"></td>';
             echo '</tr>';
             
-            echo '</table>';
+            echo '<table>';
             exit;
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage();
         }
     }
+    
+    // ==================== HELPER ====================
     
     private function euclideanDistance($desc1, $desc2) {
         $sum = 0;
