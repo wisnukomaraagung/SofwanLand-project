@@ -11,10 +11,11 @@ class BarangController {
     }
 
     public function index() {
-        $barangList  = $this->model->getAll();
-        $masukList   = $this->model->getMasuk();
-        $keluarList  = $this->model->getKeluar();
-        $summary     = $this->model->getDashboardSummary();
+        $idProyek = $_SESSION['selected_project_id'] ?? null;
+        $barangList  = $this->model->getAll($idProyek);
+        $masukList   = $this->model->getMasuk($idProyek);
+        $keluarList  = $this->model->getKeluar($idProyek);
+        $summary     = $this->model->getDashboardSummary($idProyek);
         $pageTitle   = 'Manajemen Barang';
         $pageSubtitle = 'Pencatatan barang masuk & keluar - terintegrasi laporan keuangan otomatis';
         $pageAction  = roleCanManage('barang') ? '<a href="' . BASE_URL . '/public/index.php?page=barang&action=create" class="btn btn-primary">+ Tambah Barang</a>' : '';
@@ -30,6 +31,7 @@ class BarangController {
     }
 
     public function store() {
+        $idProyek = $_SESSION['selected_project_id'] ?? null;
         $data = [
             'nama_barang'  => trim($_POST['nama_barang'] ?? ''),
             'satuan'       => trim($_POST['satuan'] ?? ''),
@@ -40,7 +42,7 @@ class BarangController {
             $_SESSION['flash'] = ['type'=>'error','message'=>'Nama barang wajib diisi.'];
             header('Location: ' . BASE_URL . '/public/index.php?page=barang&action=create'); exit;
         }
-        $this->model->create($data);
+        $this->model->create($data, $idProyek);
         $_SESSION['flash'] = ['type'=>'success','message'=>'Barang berhasil ditambahkan.'];
         header('Location: ' . BASE_URL . '/public/index.php?page=barang'); exit;
     }
@@ -77,6 +79,8 @@ class BarangController {
     // Barang Masuk
     public function storeMasuk() {
         requireManagerPermission('barang');
+        $idProyek = $_SESSION['selected_project_id'] ?? null;
+        
         // Handle new item creation dynamically
         $id_barang = intval($_POST['id_barang'] ?? 0);
         if ($id_barang === 0 && !empty($_POST['nama_barang_baru'])) {
@@ -89,7 +93,7 @@ class BarangController {
                 'satuan' => $satuan,
                 'stok' => 0,
                 'harga_satuan' => $harga_satuan
-            ]);
+            ], $idProyek);
             
             // Get the newly created ID
             $db = getDB();
@@ -134,6 +138,8 @@ class BarangController {
     // Barang Keluar
     public function storeKeluar() {
         requireManagerPermission('barang');
+        $idProyek = $_SESSION['selected_project_id'] ?? 0;
+        
         // Handle file upload (foto bukti)
         $foto_bukti = null;
         if (isset($_FILES['foto_bukti']) && $_FILES['foto_bukti']['error'] === UPLOAD_ERR_OK) {
@@ -150,7 +156,7 @@ class BarangController {
 
         $data = [
             'id_barang'  => intval($_POST['id_barang'] ?? 0),
-            'id_proyek'  => intval($_POST['id_proyek'] ?? 0),
+            'id_proyek'  => $idProyek,
             'jumlah'     => intval($_POST['jumlah'] ?? 0),
             'tanggal'    => $_POST['tanggal'] ?? date('Y-m-d'),
             'keterangan' => trim($_POST['keterangan'] ?? ''),
@@ -163,7 +169,8 @@ class BarangController {
 
     // Export Excel
     public function exportMasukExcel() {
-        $masukList = $this->model->getMasuk();
+        $idProyek = $_SESSION['selected_project_id'] ?? null;
+        $masukList = $this->model->getMasuk($idProyek);
         
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Barang_Masuk_" . date('Ymd') . ".xls\"");
@@ -206,7 +213,8 @@ class BarangController {
     }
 
     public function exportKeluarExcel() {
-        $keluarList = $this->model->getKeluar();
+        $idProyek = $_SESSION['selected_project_id'] ?? null;
+        $keluarList = $this->model->getKeluar($idProyek);
         
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Barang_Keluar_" . date('Ymd') . ".xls\"");
@@ -245,7 +253,8 @@ class BarangController {
         $masuk = $this->model->getMasukById($id);
         if (!$masuk) { header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=masuk'); exit; }
         
-        $barangList = $this->model->getAllForSelect();
+        $idProyek = $_SESSION['selected_project_id'] ?? null;
+        $barangList = $this->model->getAllForSelect($idProyek);
         $pageTitle = 'Edit Barang Masuk';
         $pageSubtitle = 'Edit catatan riwayat masuk';
         $pageAction = '<a href="' . BASE_URL . '/public/index.php?page=barang&tab=masuk" class="btn btn-secondary">← Kembali</a>';
@@ -301,7 +310,8 @@ class BarangController {
         $keluar = $this->model->getKeluarById($id);
         if (!$keluar) { header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=keluar'); exit; }
 
-        $barangList = $this->model->getAllForSelect();
+        $idProyek = $_SESSION['selected_project_id'] ?? null;
+        $barangList = $this->model->getAllForSelect($idProyek);
         $proyekList = $this->proyekModel->getAll();
         $pageTitle = 'Edit Barang Keluar';
         $pageSubtitle = 'Edit catatan riwayat keluar';

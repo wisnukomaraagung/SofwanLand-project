@@ -19,7 +19,7 @@ function getRolePermissions(): array
                 'barang'    => ['icon' => '◧', 'label' => 'Barang'],
             ],
             'manage' => ['absensi', 'barang'],
-            'dashboard_subtitle' => 'Kelola absensi dan persediaan barang',
+            'dashboard_subtitle' => 'Kelola absensi, persediaan barang, dan proyek',
         ],
         'manager' => [
             'pages' => ['dashboard', 'proyek', 'keuangan', 'barang', 'absensi'],

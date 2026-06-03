@@ -66,7 +66,7 @@
                         <?php foreach ($barangStokRendah as $b): ?>
                         <tr>
                             <td><?= htmlspecialchars($b['nama_barang']) ?></td>
-                            <td><span class="badge badge-pending"><?= (int) $b['stok'] ?></span></td>
+                            <td><span class="badge badge-pending" style="<?= $b['stok'] <= 10 ? 'background:#c0392b;color:white' : '' ?>"><?= (int) $b['stok'] ?></span></td>
                             <td class="text-muted"><?= htmlspecialchars($b['satuan']) ?></td>
                         </tr>
                         <?php endforeach; ?>

@@ -94,6 +94,7 @@ CREATE TABLE IF NOT EXISTS laporan_keuangan (
     id_proyek INT NOT NULL,
     tipe ENUM('pemasukan','pengeluaran') NOT NULL,
     jumlah DECIMAL(15,2) NOT NULL,
+    sumber VARCHAR(255) DEFAULT NULL,
     keterangan TEXT,
     tanggal DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

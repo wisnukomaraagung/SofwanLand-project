@@ -26,8 +26,15 @@
     <div class="navbar-menu" id="navMenu">
         <?php
         $currentPage = $_GET['page'] ?? 'dashboard';
-        $menuItems = getMenuForRole();
+        $menuItems   = getMenuForRole();
+        $hasProject  = !empty($_SESSION['selected_project_id']);
+
+        // Pages that require a project to be selected first
+        $projectRequired = ['absensi', 'barang', 'keuangan', 'proyek'];
+
         foreach ($menuItems as $key => $item):
+            // Skip project-gated pages if no project is selected
+            if (in_array($key, $projectRequired) && !$hasProject) continue;
             $isActive = ($currentPage === $key) ? 'active' : '';
         ?>
         <a href="<?= BASE_URL ?>/public/index.php?page=<?= $key ?>" class="nav-link <?= $isActive ?>">
@@ -36,7 +43,15 @@
         </a>
         <?php endforeach; ?>
 
+
         <div style="flex-grow: 1;"></div>
+
+        <?php if (isset($_SESSION['selected_project_name'])): ?>
+        <span class="nav-user-badge" style="background: #27ae60; color: white; display: inline-flex; align-items: center; gap: 6px;" title="Proyek Aktif">
+            📁 <?= htmlspecialchars($_SESSION['selected_project_name']) ?>
+            <a href="<?= BASE_URL ?>/public/index.php?page=dashboard&action=clearProject" style="color: white; text-decoration: none; font-weight: bold; padding: 0 4px; border-radius: 4px; background: rgba(0,0,0,0.15);" title="Nonaktifkan Filter">✕</a>
+        </span>
+        <?php endif; ?>
 
         <?php if (!empty($_SESSION['nama'])): ?>
         <span class="nav-user-badge" title="<?= htmlspecialchars(getRoleLabel()) ?>">

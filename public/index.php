@@ -101,6 +101,14 @@ if (isset($routes[$page])) {
     elseif ($action === 'updateKeluar') $controller->updateKeluar((int)$id);
     elseif ($action === 'deleteKeluar') $controller->deleteKeluar((int)$id);
     elseif ($action === 'viewBukti')   $controller->viewBukti();
+    elseif ($action === 'selectProject') {
+        $dash = new DashboardController();
+        $dash->selectProject();
+    }
+    elseif ($action === 'clearProject') {
+        $dash = new DashboardController();
+        $dash->clearProject();
+    }
     else                                $controller->index();
 } else {
     http_response_code(404);

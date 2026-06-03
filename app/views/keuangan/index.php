@@ -1,7 +1,19 @@
 <?php require BASE_PATH . '/app/views/layouts/header.php';
-$selectedProyek = $selectedProyek ?? null;
+$globalProjectId = $_SESSION['selected_project_id'] ?? null;
+?>
+
+<?php if (!$globalProjectId): ?>
+<div class="card text-center" style="padding: 40px; margin: 20px auto; max-width: 600px;">
+    <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+    <h2>Belum Ada Proyek yang Dipilih</h2>
+    <p class="text-muted" style="margin-top: 10px; margin-bottom: 20px;">Silakan pilih proyek terlebih dahulu pada Dashboard untuk melihat data keuangan.</p>
+    <a href="<?= BASE_URL ?>/public/index.php?page=dashboard" class="btn btn-primary" style="text-decoration: none;">Pilih Proyek di Dashboard</a>
+</div>
+<?php else: 
+
+$selectedProyek = $globalProjectId;
 $canManage = roleCanManage('keuangan');
-$exportUrl = '?page=keuangan&action=exportExcel' . ($selectedProyek ? '&id_proyek=' . (int) $selectedProyek : '');
+$exportUrl = '?page=keuangan&action=exportExcel';
 ?>
 
 <!-- SUMMARY CARDS -->
@@ -31,12 +43,12 @@ $exportUrl = '?page=keuangan&action=exportExcel' . ($selectedProyek ? '&id_proye
 <div class="card mt-4">
     <div class="card-header"><span class="card-title">Input Transaksi</span></div>
     <div class="card-body">
-        <form method="POST" action="<?= BASE_URL ?>/public/index.php?page=keuangan&action=store<?= $selectedProyek ? '&id_proyek=' . (int) $selectedProyek : '' ?>">
+        <form method="POST" action="<?= BASE_URL ?>/public/index.php?page=keuangan&action=store">
+            <input type="hidden" name="id_proyek" value="<?= $selectedProyek ?>">
             <div class="form-grid">
                 <div class="form-group form-full">
                     <label>Proyek *</label>
-                    <select name="id_proyek" required>
-                        <option value="">-- Pilih Proyek --</option>
+                    <select name="id_proyek_disabled" required disabled style="background-color: #f1f2f6;">
                         <?php foreach ($proyekList as $p): ?>
                         <option value="<?= $p['id'] ?>" <?= $selectedProyek === (int) $p['id'] ? 'selected' : '' ?>>
                             <?= htmlspecialchars($p['nama_proyek']) ?>
@@ -60,6 +72,10 @@ $exportUrl = '?page=keuangan&action=exportExcel' . ($selectedProyek ? '&id_proye
                     <input type="number" name="jumlah" required min="1" step="1000" placeholder="0">
                 </div>
                 <div class="form-group form-full">
+                    <label>Dari / Sumber</label>
+                    <input type="text" name="sumber" placeholder="Contoh: Klien, Vendor, Termin 1">
+                </div>
+                <div class="form-group form-full">
                     <label>Keterangan</label>
                     <textarea name="keterangan" rows="2" placeholder="Opsional..."></textarea>
                 </div>
@@ -70,15 +86,7 @@ $exportUrl = '?page=keuangan&action=exportExcel' . ($selectedProyek ? '&id_proye
 </div>
 <?php endif; ?>
 
-<!-- FILTER PROYEK -->
-<div class="pill-nav mt-4">
-    <a href="?page=keuangan" class="pill-btn <?= $selectedProyek === null ? 'active' : '' ?>">Semua Proyek</a>
-    <?php foreach ($proyekList as $p): ?>
-    <a href="?page=keuangan&id_proyek=<?= (int) $p['id'] ?>" class="pill-btn <?= $selectedProyek === (int) $p['id'] ? 'active' : '' ?>">
-        <?= htmlspecialchars($p['nama_proyek']) ?>
-    </a>
-    <?php endforeach; ?>
-</div>
+<!-- FILTER PROYEK (Disembunyikan karena proyek dipilih via dashboard) -->
 
 <!-- RIWAYAT PER PROYEK -->
 <div class="d-flex justify-content-between align-items-center mt-4 mb-2" style="flex-wrap:wrap; gap:12px;">
@@ -121,6 +129,7 @@ $exportUrl = '?page=keuangan&action=exportExcel' . ($selectedProyek ? '&id_proye
                         <th>Tanggal</th>
                         <th>Tipe</th>
                         <th class="text-right">Jumlah</th>
+                        <th>Sumber</th>
                         <th>Keterangan</th>
                         <?php if ($canManage): ?><th>Aksi</th><?php endif; ?>
                     </tr>
@@ -128,7 +137,7 @@ $exportUrl = '?page=keuangan&action=exportExcel' . ($selectedProyek ? '&id_proye
                 <tbody>
                     <?php if (empty($transaksi)): ?>
                     <tr>
-                        <td colspan="<?= $canManage ? 6 : 5 ?>" class="text-center text-muted" style="padding:24px">
+                        <td colspan="<?= $canManage ? 7 : 6 ?>" class="text-center text-muted" style="padding:24px">
                             Belum ada transaksi untuk proyek ini
                         </td>
                     </tr>
@@ -145,6 +154,7 @@ $exportUrl = '?page=keuangan&action=exportExcel' . ($selectedProyek ? '&id_proye
                         <td class="text-right font-mono fw-700" style="font-size:13px">
                             <?= $lk['tipe'] === 'pemasukan' ? '+' : '-' ?> Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?>
                         </td>
+                        <td class="text-muted"><?= htmlspecialchars($lk['sumber'] ?? '-') ?></td>
                         <td class="text-muted"><?= htmlspecialchars($lk['keterangan'] ?? '-') ?></td>
                         <?php if ($canManage): ?>
                         <td>
@@ -161,6 +171,8 @@ $exportUrl = '?page=keuangan&action=exportExcel' . ($selectedProyek ? '&id_proye
         </div>
     </div>
     <?php endforeach; ?>
+<?php endif; ?>
+
 <?php endif; ?>
 
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>

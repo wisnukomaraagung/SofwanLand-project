@@ -1,4 +1,6 @@
-<?php require BASE_PATH . '/app/views/layouts/header.php'; ?>
+<?php require BASE_PATH . '/app/views/layouts/header.php'; 
+$globalProjectId = $_SESSION['selected_project_id'] ?? null;
+?>
 
 <style>
 /* Style untuk daftar proyek */
@@ -256,8 +258,17 @@
 }
 </style>
 
+<?php if (!$globalProjectId): ?>
+<div class="card text-center" style="padding: 40px; margin: 20px auto; max-width: 600px;">
+    <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+    <h2>Belum Ada Proyek yang Dipilih</h2>
+    <p class="text-muted" style="margin-top: 10px; margin-bottom: 20px;">Silakan pilih proyek terlebih dahulu pada Dashboard untuk melihat data absensi.</p>
+    <a href="<?= BASE_URL ?>/public/index.php?page=dashboard" class="btn btn-primary" style="text-decoration: none;">Pilih Proyek di Dashboard</a>
+</div>
+<?php else: ?>
+
 <!-- HALAMAN DAFTAR PROYEK -->
-<div id="daftar-proyek-container">
+<div id="daftar-proyek-container" style="display: none;">
     <div class="page-header">
         <h1>🏗️ Absensi Face Recognition</h1>
         <p class="text-muted">Pilih proyek untuk memulai absensi</p>
@@ -279,7 +290,6 @@
 <!-- HALAMAN DETAIL PROYEK -->
 <div id="detail-container" class="proyek-detail-container">
     <div class="page-header">
-        <button class="btn-back" onclick="kembaliKeDaftar()">← Kembali ke Daftar Proyek</button>
         <h1 id="detail-nama-proyek">-</h1>
         <p id="detail-lokasi">-</p>
     </div>
@@ -831,9 +841,15 @@ document.querySelectorAll('.tab-absensi-btn').forEach(btn => {
 function exportExcel() { window.location.href = `<?= BASE_URL ?>/public/index.php?page=api&action=exportExcel&proyek_id=${currentProyekId}`; }
 
 // ==================== INIT ====================
+<?php if ($globalProjectId): ?>
+pilihProyek(<?= (int)$globalProjectId ?>);
+<?php else: ?>
 loadProyek();
+<?php endif; ?>
 loadModels();
 window.onclick = (event) => { if (event.target.classList.contains('modal')) event.target.style.display = 'none'; }
 </script>
+
+<?php endif; ?>
 
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>

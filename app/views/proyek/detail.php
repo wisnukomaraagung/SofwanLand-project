@@ -101,7 +101,7 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
 
 <div class="detail-wrapper">
 
-    <a href="<?= BASE_URL ?>/proyek" class="back-button">
+    <a href="<?= BASE_URL ?>/public/index.php?page=proyek" class="back-button">
         <i class="ri-arrow-left-line"></i> Kembali ke Daftar Proyek
     </a>
 
@@ -163,9 +163,14 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
     </div>
 
     <!-- Tombol Aksi -->
-    <div class="action-buttons" style="display: flex; gap: 10px; margin: 20px 0;">
-        <a href="<?= BASE_URL ?>/proyek/edit/<?= $proyek['id'] ?? '' ?>" class="btn btn-primary"><i class="ri-edit-line"></i> Edit</a>
-        <a href="<?= BASE_URL ?>/pengeluaran/tambah/<?= $proyek['id'] ?? '' ?>" class="btn btn-outline"><i class="ri-add-line"></i> Tambah Pengeluaran</a>
+    <div class="action-buttons" style="display: flex; gap: 10px; margin: 20px 0; align-items: center; flex-wrap: wrap;">
+        <?php if (roleCanManage('proyek')): ?>
+        <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=edit&id=<?= $proyek['id'] ?? '' ?>" class="btn btn-primary"><i class="ri-edit-line"></i> Edit Proyek</a>
+        <a href="javascript:void(0)"
+           onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=proyek&action=delete&id=<?= $proyek['id'] ?? '' ?>', '<?= htmlspecialchars($proyek['nama_proyek'] ?? '', ENT_QUOTES) ?>')"
+           class="btn" style="background:#e74c3c; color:white;"><i class="ri-delete-bin-line"></i> Hapus Proyek</a>
+        <?php endif; ?>
+        <a href="<?= BASE_URL ?>/public/index.php?page=keuangan" class="btn btn-outline"><i class="ri-add-line"></i> Tambah Pengeluaran</a>
     </div>
 
     <!-- Tabs -->

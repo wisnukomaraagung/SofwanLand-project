@@ -9,13 +9,10 @@ class KeuanganController {
     }
 
     public function index() {
-        $selectedProyek = isset($_GET['id_proyek']) ? (int) $_GET['id_proyek'] : null;
-        if ($selectedProyek !== null && $selectedProyek <= 0) {
-            $selectedProyek = null;
-        }
+        $selectedProyek = $_SESSION['selected_project_id'] ?? null;
 
         $riwayatPerProyek = $this->model->getRiwayatPerProyek($selectedProyek);
-        $summary          = $this->model->getSummary();
+        $summary          = $this->model->getSummary($selectedProyek);
         $proyekList       = $this->model->getProyek();
         $pageTitle        = 'Keuangan';
         $pageSubtitle     = 'Laporan pemasukan dan pengeluaran per proyek';
@@ -23,20 +20,23 @@ class KeuanganController {
     }
 
     private function keuanganRedirectUrl(): string {
-        $url = BASE_URL . '/public/index.php?page=keuangan';
-        $idProyek = intval($_GET['id_proyek'] ?? $_POST['id_proyek'] ?? 0);
-        if ($idProyek > 0) {
-            $url .= '&id_proyek=' . $idProyek;
-        }
-        return $url;
+        return BASE_URL . '/public/index.php?page=keuangan';
     }
 
     public function store() {
         requireManagerPermission('keuangan');
+        $idProyek = $_SESSION['selected_project_id'] ?? intval($_POST['id_proyek'] ?? 0);
+        
+        if ($idProyek <= 0) {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Harap pilih proyek terlebih dahulu.'];
+            header('Location: ' . $this->keuanganRedirectUrl()); exit;
+        }
+
         $data = [
-            'id_proyek'  => intval($_POST['id_proyek'] ?? 0),
+            'id_proyek'  => $idProyek,
             'tipe'       => $_POST['tipe'] ?? 'pengeluaran',
             'jumlah'     => floatval(str_replace(['.', ','], ['', '.'], $_POST['jumlah'] ?? 0)),
+            'sumber'     => trim($_POST['sumber'] ?? ''),
             'keterangan' => trim($_POST['keterangan'] ?? ''),
             'tanggal'    => $_POST['tanggal'] ?? date('Y-m-d'),
         ];
@@ -53,10 +53,7 @@ class KeuanganController {
     }
 
     public function exportExcel() {
-        $selectedProyek = isset($_GET['id_proyek']) ? (int) $_GET['id_proyek'] : null;
-        if ($selectedProyek !== null && $selectedProyek <= 0) {
-            $selectedProyek = null;
-        }
+        $selectedProyek = $_SESSION['selected_project_id'] ?? null;
         $riwayatPerProyek = $this->model->getRiwayatPerProyek($selectedProyek);
         
         header("Content-Type: application/vnd.ms-excel");
@@ -71,15 +68,16 @@ class KeuanganController {
         echo "<th>Proyek</th>";
         echo "<th>Tipe</th>";
         echo "<th>Jumlah</th>";
+        echo "<th>Sumber</th>";
         echo "<th>Keterangan</th>";
         echo "</tr>";
         
         $no = 1;
         foreach ($riwayatPerProyek as $group) {
             $nama = $group['proyek']['nama_proyek'];
-            echo "<tr><td colspan='6'><strong>" . htmlspecialchars($nama) . "</strong></td></tr>";
+            echo "<tr><td colspan='7'><strong>" . htmlspecialchars($nama) . "</strong></td></tr>";
             if (empty($group['transaksi'])) {
-                echo "<tr><td colspan='6'>Tidak ada transaksi</td></tr>";
+                echo "<tr><td colspan='7'>Tidak ada transaksi</td></tr>";
                 continue;
             }
             foreach ($group['transaksi'] as $k) {
@@ -89,6 +87,7 @@ class KeuanganController {
                 echo "<td>" . htmlspecialchars($k['nama_proyek']) . "</td>";
                 echo "<td>" . ucfirst($k['tipe']) . "</td>";
                 echo "<td>" . $k['jumlah'] . "</td>";
+                echo "<td>" . htmlspecialchars($k['sumber'] ?? '-') . "</td>";
                 echo "<td>" . htmlspecialchars($k['keterangan'] ?? '-') . "</td>";
                 echo "</tr>";
             }

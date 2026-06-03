@@ -750,3 +750,54 @@ textarea { resize: vertical; min-height: 90px; }
     color: var(--black);
 }
 
+/* Low-stock highlight */
+.low-stock {
+    color: #c0392b;
+    font-weight: 800;
+}
+
+/* Read-only project display when a global project is active */
+.project-readonly {
+    padding: 10px 12px;
+    background: #f1f2f6;
+    border-radius: 8px;
+    color: var(--dark);
+    border: 1px solid #e6e7ea;
+}
+
+/* small helper for tooltip-like title */
+.project-readonly[title] { cursor: help; }
+
+.project-switch-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #ffffff;
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.project-switch-info {
+    font-size: 14px;
+    color: var(--gray-700);
+}
+
+.project-switch-info strong {
+    margin-left: 8px;
+    color: var(--black);
+}
+
+.project-switch-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.project-switch-select {
+    min-width: 220px;
+}

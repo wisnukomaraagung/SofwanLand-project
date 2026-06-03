@@ -59,14 +59,34 @@ class KeuanganModel {
         return $result;
     }
 
-    public function getSummary(): array {
+    public function getSummary(?int $idProyek = null): array {
+        if ($idProyek !== null && $idProyek > 0) {
+            $stmt = $this->db->prepare("
+                SELECT
+                    SUM(CASE WHEN tipe='pemasukan' THEN jumlah ELSE 0 END) AS total_pemasukan,
+                    SUM(CASE WHEN tipe='pengeluaran' THEN jumlah ELSE 0 END) AS total_pengeluaran,
+                    COUNT(*) AS total_transaksi
+                FROM laporan_keuangan
+                WHERE id_proyek = ?
+            ");
+            $stmt->execute([$idProyek]);
+            return $stmt->fetch() ?: [
+                'total_pemasukan' => 0,
+                'total_pengeluaran' => 0,
+                'total_transaksi' => 0
+            ];
+        }
         return $this->db->query("
             SELECT
                 SUM(CASE WHEN tipe='pemasukan' THEN jumlah ELSE 0 END) AS total_pemasukan,
                 SUM(CASE WHEN tipe='pengeluaran' THEN jumlah ELSE 0 END) AS total_pengeluaran,
                 COUNT(*) AS total_transaksi
             FROM laporan_keuangan
-        ")->fetch();
+        ")->fetch() ?: [
+            'total_pemasukan' => 0,
+            'total_pengeluaran' => 0,
+            'total_transaksi' => 0
+        ];
     }
 
     public function getSummaryPerProyek(): array {
@@ -87,10 +107,10 @@ class KeuanganModel {
 
     public function create(array $data): bool {
         $stmt = $this->db->prepare("
-            INSERT INTO laporan_keuangan (id_proyek, tipe, jumlah, keterangan, tanggal)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO laporan_keuangan (id_proyek, tipe, jumlah, sumber, keterangan, tanggal)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
-        return $stmt->execute([$data['id_proyek'], $data['tipe'], $data['jumlah'], $data['keterangan'], $data['tanggal']]);
+        return $stmt->execute([$data['id_proyek'], $data['tipe'], $data['jumlah'], $data['sumber'], $data['keterangan'], $data['tanggal']]);
     }
 
     public function delete(int $id): bool {

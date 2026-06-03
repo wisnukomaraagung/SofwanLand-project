@@ -4,6 +4,11 @@
 <div class="alert alert-error"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
 <?php endif; ?>
 
+<?php
+$selectedProjectId = $selectedProjectId ?? null;
+$selectedProjectName = $_SESSION['selected_project_name'] ?? null;
+?>
+
 <?php if ($role === 'manager'): ?>
 
 <!-- STAT CARDS -->
@@ -58,7 +63,9 @@
     </div>
 </div>
 
-<!-- DAFTAR PROYEK -->
+<?php endif; /* end manager-only charts */ ?>
+
+<!-- DAFTAR PROYEK (Semua Role) -->
 <div class="card">
     <div class="card-header">
         <span class="card-title">Daftar Proyek</span>
@@ -74,11 +81,12 @@
                     <th>Status</th>
                     <th>Progress</th>
                     <th class="text-right">Total Biaya</th>
+                    <th class="text-center">Pilih</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($daftarProyek)): ?>
-                <tr><td colspan="6" class="text-center text-muted" style="padding:40px">Belum ada data proyek</td></tr>
+                <tr><td colspan="7" class="text-center text-muted" style="padding:40px">Belum ada data proyek</td></tr>
                 <?php else: ?>
                 <?php foreach ($daftarProyek as $i => $p): ?>
                 <tr>
@@ -106,6 +114,22 @@
                     <td class="text-right font-mono" style="font-size:13px">
                         Rp <?= number_format($p['total_biaya'], 0, ',', '.') ?>
                     </td>
+                    <td class="text-center">
+                        <?php $isSelected = ($selectedProjectId === (int)$p['id']); ?>
+                        <?php if ($isSelected): ?>
+                            <a href="<?= BASE_URL ?>/public/index.php?page=dashboard&action=clearProject"
+                               class="btn btn-secondary btn-sm"
+                               style="background:#7f8c8d; color:white; text-decoration:none; font-size:11px;">
+                               ✓ Aktif — Batalkan
+                            </a>
+                        <?php else: ?>
+                            <a href="<?= BASE_URL ?>/public/index.php?page=dashboard&action=selectProject&id=<?= $p['id'] ?>"
+                               class="btn btn-primary btn-sm"
+                               style="text-decoration:none; font-size:11px;">
+                               Pilih
+                            </a>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 <?php endif; ?>
@@ -114,6 +138,7 @@
     </div>
 </div>
 
+<?php if ($role === 'manager'): ?>
 <script>
 (function() {
     const rawBiaya = <?= json_encode($biayaPerBulan) ?>;
@@ -194,8 +219,9 @@
     });
 })();
 </script>
+<?php endif; /* end manager chart scripts */ ?>
 
-<?php else: ?>
+<?php if ($role !== 'manager'): /* admin section */ ?>
 
 <!-- STAT CARDS -->
 <div class="stats-grid">
@@ -259,7 +285,7 @@
                         <?php foreach ($barangStokRendah as $b): ?>
                         <tr>
                             <td><?= htmlspecialchars($b['nama_barang']) ?></td>
-                            <td><span class="badge badge-pending"><?= (int) $b['stok'] ?></span></td>
+                            <td><span class="badge badge-pending" style="<?= $b['stok'] <= 10 ? 'background:#c0392b;color:white' : '' ?>"><?= (int) $b['stok'] ?></span></td>
                             <td class="text-muted"><?= htmlspecialchars($b['satuan']) ?></td>
                         </tr>
                         <?php endforeach; ?>

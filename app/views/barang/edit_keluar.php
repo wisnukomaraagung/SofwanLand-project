@@ -16,6 +16,14 @@
                     </select>
                 </div>
 
+                <?php $selectedProjectId = $_SESSION['selected_project_id'] ?? null; ?>
+                <?php if ($selectedProjectId): ?>
+                <div class="form-group form-full">
+                    <label>Proyek</label>
+                    <input type="hidden" name="id_proyek" value="<?= $selectedProjectId ?>">
+                    <div class="project-readonly" title="Proyek aktif — otomatis terpilih"><?= htmlspecialchars($_SESSION['selected_project_name'] ?? '') ?></div>
+                </div>
+                <?php else: ?>
                 <div class="form-group form-full">
                     <label>Proyek *</label>
                     <select name="id_proyek" required>
@@ -26,6 +34,7 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <?php endif; ?>
 
                 <div class="form-group">
                     <label>Jumlah *</label>

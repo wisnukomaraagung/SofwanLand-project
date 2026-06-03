@@ -1,6 +1,12 @@
 <?php require BASE_PATH . '/app/views/layouts/header.php'; ?>
 
 <div class="card">
+    <div class="card-header">
+        <span class="card-title">◫ Daftar Proyek</span>
+        <?php if (roleCanManage('proyek')): ?>
+        <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=create" class="btn btn-primary btn-sm">+ Tambah Proyek</a>
+        <?php endif; ?>
+    </div>
     <div class="table-wrap">
         <table>
             <thead>
@@ -41,12 +47,13 @@
                     <td class="text-right" style="font-size:13px">Rp <?= number_format($p['nilai_kontrak'], 0, ',', '.') ?></td>
                     <td class="text-right" style="font-size:13px">Rp <?= number_format($p['total_biaya'], 0, ',', '.') ?></td>
                     <td>
-                        <div class="flex">
-                            <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=detail&id=<?= $p['id'] ?>" class="btn btn-secondary btn-sm">Detail</a>
+                        <div class="flex" style="gap: 6px;">
+                            <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=detail&id=<?= $p['id'] ?>" class="btn btn-secondary btn-sm" style="font-size:11px;">Detail</a>
                             <?php if (roleCanManage('proyek')): ?>
+                            <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=edit&id=<?= $p['id'] ?>" class="btn btn-secondary btn-sm" style="font-size:11px; background:#2980b9; color:white;">Edit</a>
                             <a href="javascript:void(0)"
                                onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=proyek&action=delete&id=<?= $p['id'] ?>', '<?= htmlspecialchars($p['nama_proyek'], ENT_QUOTES) ?>')"
-                               class="btn btn-danger btn-sm">Hapus</a>
+                               class="btn btn-danger btn-sm" style="font-size:11px;">Hapus</a>
                             <?php endif; ?>
                         </div>
                     </td>

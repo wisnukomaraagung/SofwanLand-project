@@ -8,7 +8,21 @@ class BarangModel {
         $this->db = getDB();
     }
 
-    public function getAll(): array {
+    public function getAll(?int $idProyek = null): array {
+        if ($idProyek !== null) {
+            $stmt = $this->db->prepare("
+                SELECT b.*,
+                    COALESCE(SUM(bm.jumlah), 0) AS total_masuk,
+                    COALESCE(SUM(bk.jumlah), 0) AS total_keluar
+                FROM barang b
+                LEFT JOIN barang_masuk bm ON bm.id_barang = b.id
+                LEFT JOIN barang_keluar bk ON bk.id_barang = b.id
+                WHERE b.id_proyek = ?
+                GROUP BY b.id ORDER BY b.nama_barang ASC
+            ");
+            $stmt->execute([$idProyek]);
+            return $stmt->fetchAll();
+        }
         return $this->db->query("
             SELECT b.*,
                 COALESCE(SUM(bm.jumlah), 0) AS total_masuk,
@@ -26,13 +40,18 @@ class BarangModel {
         return $stmt->fetch() ?: null;
     }
 
-    public function getAllForSelect(): array {
+    public function getAllForSelect(?int $idProyek = null): array {
+        if ($idProyek !== null) {
+            $stmt = $this->db->prepare("SELECT id, nama_barang, satuan, stok FROM barang WHERE id_proyek = ? ORDER BY nama_barang");
+            $stmt->execute([$idProyek]);
+            return $stmt->fetchAll();
+        }
         return $this->db->query("SELECT id, nama_barang, satuan, stok FROM barang ORDER BY nama_barang")->fetchAll();
     }
 
-    public function create(array $data): bool {
-        $stmt = $this->db->prepare("INSERT INTO barang (nama_barang, satuan, stok, harga_satuan) VALUES (?,?,?,?)");
-        return $stmt->execute([$data['nama_barang'], $data['satuan'], $data['stok'], $data['harga_satuan']]);
+    public function create(array $data, ?int $idProyek = null): bool {
+        $stmt = $this->db->prepare("INSERT INTO barang (nama_barang, satuan, stok, harga_satuan, id_proyek) VALUES (?,?,?,?,?)");
+        return $stmt->execute([$data['nama_barang'], $data['satuan'], $data['stok'], $data['harga_satuan'], $idProyek]);
     }
 
     public function update(int $id, array $data): bool {
@@ -45,7 +64,17 @@ class BarangModel {
         return $stmt->execute([$id]);
     }
 
-    public function getMasuk(): array {
+    public function getMasuk(?int $idProyek = null): array {
+        if ($idProyek !== null) {
+            $stmt = $this->db->prepare("
+                SELECT bm.*, b.nama_barang, b.satuan
+                FROM barang_masuk bm JOIN barang b ON b.id = bm.id_barang
+                WHERE b.id_proyek = ?
+                ORDER BY bm.tanggal DESC LIMIT 50
+            ");
+            $stmt->execute([$idProyek]);
+            return $stmt->fetchAll();
+        }
         return $this->db->query("
             SELECT bm.*, b.nama_barang, b.satuan
             FROM barang_masuk bm JOIN barang b ON b.id = bm.id_barang
@@ -53,32 +82,57 @@ class BarangModel {
         ")->fetchAll();
     }
 
-    public function getDashboardSummary(): array {
+    public function getDashboardSummary(?int $idProyek = null): array {
         $bulanIni = date('Y-m');
         
-        try {
-            $pengeluaran = $this->db->query("SELECT COALESCE(SUM(harga_satuan * jumlah), 0) FROM barang_masuk WHERE DATE_FORMAT(tanggal, '%Y-%m') = '$bulanIni'")->fetchColumn();
-        } catch (PDOException $e) {
-            // Jika kolom belum ada (belum migrasi), jalankan ALTER TABLE
-            if (strpos($e->getMessage(), 'Unknown column') !== false) {
-                $this->db->exec("ALTER TABLE barang_masuk ADD COLUMN harga_satuan DECIMAL(15,2) DEFAULT 0;");
-                $this->db->exec("ALTER TABLE barang_masuk ADD COLUMN supplier VARCHAR(255) NULL;");
-                $this->db->exec("ALTER TABLE barang_masuk ADD COLUMN no_kuitansi VARCHAR(100) NULL;");
-                $this->db->exec("ALTER TABLE barang_masuk ADD COLUMN foto_kuitansi VARCHAR(255) NULL;");
-                
-                // Retry
-                $pengeluaran = $this->db->query("SELECT COALESCE(SUM(harga_satuan * jumlah), 0) FROM barang_masuk WHERE DATE_FORMAT(tanggal, '%Y-%m') = '$bulanIni'")->fetchColumn();
-            } else {
-                throw $e;
-            }
+        if ($idProyek !== null) {
+            $pengeluaran = $this->db->prepare("
+                SELECT COALESCE(SUM(bm.harga_satuan * bm.jumlah), 0) 
+                FROM barang_masuk bm
+                JOIN barang b ON b.id = bm.id_barang
+                WHERE DATE_FORMAT(bm.tanggal, '%Y-%m') = ? AND b.id_proyek = ?
+            ");
+            $pengeluaran->execute([$bulanIni, $idProyek]);
+            $pengeluaranVal = $pengeluaran->fetchColumn();
+
+            $jenisBarang = $this->db->prepare("SELECT COUNT(*) FROM barang WHERE id_proyek = ?");
+            $jenisBarang->execute([$idProyek]);
+            $jenisBarangVal = $jenisBarang->fetchColumn();
+
+            $transaksiMasuk = $this->db->prepare("
+                SELECT COUNT(*) FROM barang_masuk bm
+                JOIN barang b ON b.id = bm.id_barang
+                WHERE b.id_proyek = ?
+            ");
+            $transaksiMasuk->execute([$idProyek]);
+            $transaksiMasukVal = $transaksiMasuk->fetchColumn();
+
+            $transaksiKeluar = $this->db->prepare("SELECT COUNT(*) FROM barang_keluar WHERE id_proyek = ?");
+            $transaksiKeluar->execute([$idProyek]);
+            $transaksiKeluarVal = $transaksiKeluar->fetchColumn();
+
+            $totalPengeluaran = $this->db->prepare("
+                SELECT COALESCE(SUM(bm.harga_satuan * bm.jumlah), 0) 
+                FROM barang_masuk bm
+                JOIN barang b ON b.id = bm.id_barang
+                WHERE b.id_proyek = ?
+            ");
+            $totalPengeluaran->execute([$idProyek]);
+            $totalPengeluaranVal = $totalPengeluaran->fetchColumn();
+
+            return [
+                'pengeluaran_bulan_ini' => $pengeluaranVal,
+                'jenis_barang' => $jenisBarangVal,
+                'transaksi_masuk' => $transaksiMasukVal,
+                'transaksi_keluar' => $transaksiKeluarVal,
+                'total_pengeluaran' => $totalPengeluaranVal
+            ];
         }
         
+        $pengeluaran = $this->db->query("SELECT COALESCE(SUM(harga_satuan * jumlah), 0) FROM barang_masuk WHERE DATE_FORMAT(tanggal, '%Y-%m') = '$bulanIni'")->fetchColumn();
         $jenisBarang = $this->db->query("SELECT COUNT(*) FROM barang")->fetchColumn();
-        
         $transaksiMasuk = $this->db->query("SELECT COUNT(*) FROM barang_masuk")->fetchColumn();
-        
         $transaksiKeluar = $this->db->query("SELECT COUNT(*) FROM barang_keluar")->fetchColumn();
-        
         $totalPengeluaran = $this->db->query("SELECT COALESCE(SUM(harga_satuan * jumlah), 0) FROM barang_masuk")->fetchColumn();
         
         return [
@@ -90,7 +144,19 @@ class BarangModel {
         ];
     }
 
-    public function getKeluar(): array {
+    public function getKeluar(?int $idProyek = null): array {
+        if ($idProyek !== null) {
+            $stmt = $this->db->prepare("
+                SELECT bk.*, b.nama_barang, b.satuan, p.nama_proyek
+                FROM barang_keluar bk
+                JOIN barang b ON b.id = bk.id_barang
+                JOIN proyek p ON p.id = bk.id_proyek
+                WHERE bk.id_proyek = ?
+                ORDER BY bk.tanggal DESC LIMIT 50
+            ");
+            $stmt->execute([$idProyek]);
+            return $stmt->fetchAll();
+        }
         return $this->db->query("
             SELECT bk.*, b.nama_barang, b.satuan, p.nama_proyek
             FROM barang_keluar bk

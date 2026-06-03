@@ -1,8 +1,37 @@
 <?php require BASE_PATH . '/app/views/layouts/header.php';
+$globalProjectId = $_SESSION['selected_project_id'] ?? null;
+?>
+
+<?php if (!$globalProjectId): ?>
+<div class="card text-center" style="padding: 40px; margin: 20px auto; max-width: 600px;">
+    <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+    <h2>Belum Ada Proyek yang Dipilih</h2>
+    <p class="text-muted" style="margin-top: 10px; margin-bottom: 20px;">Silakan pilih proyek terlebih dahulu pada Dashboard untuk melihat data barang (inventori).</p>
+    <a href="<?= BASE_URL ?>/public/index.php?page=dashboard" class="btn btn-primary" style="text-decoration: none;">Pilih Proyek di Dashboard</a>
+</div>
+<?php else: 
+
 $barangForSelect = $barangList; // reuse for forms
 $proyekList = (new ProyekModel())->getAll();
 $canManageBarang = roleCanManage('barang');
 ?>
+
+<div class="project-switch-bar">
+    <div class="project-switch-info">
+        <span>Proyek aktif:</span>
+        <strong><?= htmlspecialchars($_SESSION['selected_project_name'] ?? '-') ?></strong>
+    </div>
+    <form class="project-switch-form" action="<?= BASE_URL ?>/public/index.php" method="get">
+        <input type="hidden" name="page" value="dashboard">
+        <input type="hidden" name="action" value="selectProject">
+        <select name="id" class="project-switch-select" aria-label="Pilih Proyek Baru">
+            <?php foreach ($proyekList as $proyek): ?>
+                <option value="<?= $proyek['id'] ?>" <?= $proyek['id'] == $globalProjectId ? 'selected' : '' ?>><?= htmlspecialchars($proyek['nama_proyek']) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm">Ganti Proyek</button>
+    </form>
+</div>
 
 <!-- SUMMARY CARDS -->
 <div class="stats-grid">
@@ -224,7 +253,7 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                     <td class="text-right font-mono" style="font-size:13px">Rp <?= number_format($b['harga_satuan'],0,',','.') ?></td>
                     <td class="text-right"><?= number_format($b['total_masuk']) ?></td>
                     <td class="text-right"><?= number_format($b['total_keluar']) ?></td>
-                    <td class="text-right fw-700" style="<?= $b['stok'] < 10 ? 'color:#c0392b' : '' ?>"><?= number_format($b['stok']) ?></td>
+                    <td class="text-right fw-700 <?= $b['stok'] <= 10 ? 'low-stock' : '' ?>"><?= number_format($b['stok']) ?></td>
                     <?php if ($canManageBarang): ?>
                     <td>
                         <div class="flex">
@@ -282,6 +311,13 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <?php if ($globalProjectId): ?>
+                    <div class="form-group form-full">
+                        <label>Proyek</label>
+                        <input type="hidden" name="id_proyek" value="<?= $globalProjectId ?>">
+                        <div class="project-readonly" title="Proyek aktif — otomatis terpilih"><?= htmlspecialchars($_SESSION['selected_project_name'] ?? '') ?></div>
+                    </div>
+                    <?php else: ?>
                     <div class="form-group form-full">
                         <label>Proyek *</label>
                         <select name="id_proyek" required>
@@ -291,6 +327,7 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <?php endif; ?>
                     <div class="form-group">
                         <label>Jumlah *</label>
                         <input type="number" name="jumlah" min="1" required placeholder="0">
@@ -373,6 +410,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+<?php endif; ?>
+
 <?php endif; ?>
 
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>
