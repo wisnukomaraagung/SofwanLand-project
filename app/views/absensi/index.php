@@ -270,7 +270,7 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
 <!-- HALAMAN DAFTAR PROYEK -->
 <div id="daftar-proyek-container" style="display: none;">
     <div class="page-header">
-        <h1>🏗️ Absensi Face Recognition</h1>
+        <h1>Absen</h1>
         <p class="text-muted">Pilih proyek untuk memulai absensi</p>
     </div>
     <div class="card">
@@ -295,15 +295,15 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
     </div>
 
     <div class="grid-3" style="margin-bottom: 24px;">
-        <div class="stat-card"><div class="stat-number" id="stat-karyawan">0</div><div class="stat-label">Karyawan</div></div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="stat-number" id="stat-hadir">0</div><div class="stat-label">Hadir Bulan Ini</div></div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="stat-number" id="stat-gaji">Rp 0</div><div class="stat-label">Total Gaji Bulan Ini</div></div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #000000 0%, #090909 100%);"><div class="stat-number" id="stat-karyawan">0</div><div class="stat-label">Karyawan</div></div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #000000 0%, #090909 100%);"><div class="stat-number" id="stat-hadir">0</div><div class="stat-label">Hadir Bulan Ini</div></div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #070707 0%, #0a0a0a 100%);"><div class="stat-number" id="stat-gaji">Rp 0</div><div class="stat-label">Total Gaji Bulan Ini</div></div>
     </div>
 
     <div class="tab-absensi">
         <button class="tab-absensi-btn active" data-tab="karyawan">👥 Daftar Karyawan</button>
         <button class="tab-absensi-btn" data-tab="absensi">📋 Riwayat Absensi</button>
-        <button class="tab-absensi-btn" data-tab="face">🎯 Face Recognition Absen</button>
+        <button class="tab-absensi-btn" data-tab="face">Absen</button>
     </div>
 
     <!-- Tab Karyawan -->
@@ -315,7 +315,7 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
             </div>
             <div class="table-wrap">
                 <table class="table">
-                    <thead><tr><th>#</th><th>NIK</th><th>Nama</th><th>Jabatan</th><th>Gaji Pokok</th><th>Status Wajah</th><th>Aksi</th></tr></thead>
+                    <thead><tr><th>NIK</th><th>Nama</th><th>Jabatan</th><th>Gaji Pokok</th><th>Status Wajah</th><th>Aksi</th></tr></thead>
                     <tbody id="karyawan-tbody"><tr><td colspan="7" class="text-center">Loading...</td></tr></tbody>
                 </table>
             </div>
@@ -342,13 +342,18 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
     <div id="tab-face" class="tab-pane">
         <div class="card">
             <div class="card-header">
-                <span>🎯 Face Recognition Absen</span>
+                <span>Absen</span>
                 <span style="font-size: 12px; margin-left: 15px;">✅ Absen Masuk (Otomatis/Manual) | ⚠️ Absen Keluar hanya oleh ADMIN</span>
             </div>
             <div class="card-body">
                 <input type="hidden" id="current-proyek-id" value="">
                 
-                <div style="position: relative; display: flex; justify-content: center; margin-bottom: 20px;">
+                
+<div id="live-clock-box" style="text-align:center;margin-bottom:15px;">
+    <div id="live-date" style="font-size:14px;font-weight:600;"></div>
+    <div id="live-clock" style="font-size:32px;font-weight:700;">00:00:00</div>
+</div>
+<div style="position: relative; display: flex; justify-content: center; margin-bottom: 20px;">
                     <div style="position: relative;">
                         <video id="video" autoplay muted playsinline style="width: 100%; max-width: 500px; border-radius: 12px; background: #000;"></video>
                         <canvas id="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
@@ -358,7 +363,10 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
                 
                 <div style="text-align: center;">
                     <button id="start-camera" class="btn-camera">🎥 Mulai Kamera</button>
-                    <button id="stop-camera" class="btn-camera btn-camera-stop">⏹️ Stop Kamera</button>
+                    <button id="stop-camera" class="btn-camera btn-camera-stop">Stop Kamera</button>
+                    <button id="btnAbsenKeluar" class="btn btn-danger">
+    📤 Absen Keluar
+</button>
                 </div>
                 
                 <div id="detected-info" style="display: none; margin-top: 20px;">
@@ -423,7 +431,7 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
 <!-- Modal Edit Absen Keluar (Admin) -->
 <div id="modal-edit-keluar" class="modal" style="display: none;">
     <div class="modal-content">
-        <div class="modal-header"><span>✏️ Edit Absen Keluar</span><span class="close" onclick="closeEditModal()">&times;</span></div>
+        <div class="modal-header"><span>Edit Absen Keluar</span><span class="close" onclick="closeEditModal()">&times;</span></div>
         <form id="form-edit-keluar">
             <input type="hidden" id="edit_id_absensi">
             <div class="form-group"><label>Jam Keluar</label><input type="time" id="edit_jam_keluar" class="form-control" required></div>
@@ -691,7 +699,7 @@ async function loadModels() {
     for (const url of modelUrls) {
         try {
             await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(url), faceapi.nets.faceLandmark68Net.loadFromUri(url), faceapi.nets.faceRecognitionNet.loadFromUri(url)]);
-            modelsLoaded = true; scanStatus.innerHTML = '✅ Model siap. Klik Mulai Kamera'; return;
+            modelsLoaded = true; scanStatus.innerHTML = '✅ Klik Mulai Kamera'; return;
         } catch (err) { console.warn('Gagal dari:', url); }
     }
     scanStatus.innerHTML = '❌ Gagal muat model';
@@ -757,6 +765,7 @@ async function recognizeFace(faceDescriptor) {
             document.getElementById('submit-absen').disabled = false;
             scanStatus.innerHTML = `✅ Dikenali: ${result.karyawan.nama}`;
             await autoAbsenMasuk(result.karyawan.id);
+            currentKaryawanId = result.karyawan.id;
             takeSnapshot();
         }
     } catch (error) { console.error(error); }
@@ -785,6 +794,88 @@ async function autoAbsenMasuk(id_karyawan) {
         else if (!result.message.includes('sudah absen masuk')) console.log(result.message);
     } catch (error) { console.error(error); }
 }
+
+async function absenKeluar() {
+
+    if (!currentKaryawanId) {
+        showMessage('Scan wajah terlebih dahulu', 'error');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async function(position){
+
+        const formData = new FormData();
+
+        formData.append('id_karyawan', currentKaryawanId);
+        formData.append('id_proyek', currentProyekId);
+        formData.append('absensi_type', 'keluar');
+
+        formData.append(
+            'latitude',
+            position.coords.latitude
+        );
+
+        formData.append(
+            'longitude',
+            position.coords.longitude
+        );
+
+        try {
+
+            const response = await fetch(
+                '<?= BASE_URL ?>/public/index.php?page=api&action=storeAbsensi',
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
+
+            const result = await response.json();
+
+            if (result.success) {
+
+                showMessage(
+                    '✅ Absen Keluar Berhasil!',
+                    'success'
+                );
+
+                loadStatistik(currentProyekId);
+                loadAbsensi(currentProyekId);
+
+            } else {
+
+                showMessage(
+                    result.message,
+                    'error'
+                );
+
+            }
+
+        } catch(error) {
+
+            console.error(error);
+
+            showMessage(
+                'Gagal melakukan absen keluar',
+                'error'
+            );
+
+        }
+
+    }, function(){
+
+        showMessage(
+            'Aktifkan GPS terlebih dahulu',
+            'error'
+        );
+
+    });
+
+}
+
+document
+.getElementById('btnAbsenKeluar')
+.addEventListener('click', absenKeluar);
 
 // ==================== MANUAL ABSEN MASUK ====================
 document.getElementById('btn-manual-masuk').addEventListener('click', async () => {
@@ -840,6 +931,31 @@ document.querySelectorAll('.tab-absensi-btn').forEach(btn => {
 
 function exportExcel() { window.location.href = `<?= BASE_URL ?>/public/index.php?page=api&action=exportExcel&proyek_id=${currentProyekId}`; }
 
+
+function updateRealtimeClock(){
+    const now=new Date();
+    const jam=String(now.getHours()).padStart(2,'0');
+    const menit=String(now.getMinutes()).padStart(2,'0');
+    const detik=String(now.getSeconds()).padStart(2,'0');
+
+    const tanggal=now.toLocaleDateString('id-ID',{
+        weekday:'long',
+        day:'2-digit',
+        month:'long',
+        year:'numeric'
+    });
+
+    const c=document.getElementById('live-clock');
+    const d=document.getElementById('live-date');
+
+    if(c) c.innerHTML=`${jam}:${menit}:${detik}`;
+    if(d) d.innerHTML=tanggal;
+}
+
+setInterval(updateRealtimeClock,1000);
+updateRealtimeClock();
+
+
 // ==================== INIT ====================
 <?php if ($globalProjectId): ?>
 pilihProyek(<?= (int)$globalProjectId ?>);
@@ -848,6 +964,7 @@ loadProyek();
 <?php endif; ?>
 loadModels();
 window.onclick = (event) => { if (event.target.classList.contains('modal')) event.target.style.display = 'none'; }
+let currentKaryawanId = null;
 </script>
 
 <?php endif; ?>

@@ -155,6 +155,97 @@ class ApiController {
                 return;
             }
             
+            // ==================== VALIDASI PROYEK ====================
+
+$cekProyek = $this->db->prepare("
+    SELECT *
+    FROM proyek_karyawan
+    WHERE id_karyawan = ?
+    AND id_proyek = ?
+");
+
+$cekProyek->execute([
+    $id_karyawan,
+    $id_proyek
+]);
+
+if (!$cekProyek->fetch()) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Anda tidak terdaftar pada proyek ini'
+    ]);
+    return;
+}
+
+// ==================== VALIDASI GPS ====================
+
+$user_lat = $_POST['latitude'] ?? null;
+$user_lng = $_POST['longitude'] ?? null;
+
+if (!$user_lat || !$user_lng) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'GPS tidak aktif'
+    ]);
+    return;
+}
+
+$getProyek = $this->db->prepare("
+    SELECT latitude, longitude, radius_meter
+    FROM proyek
+    WHERE id = ?
+");
+
+$getProyek->execute([$id_proyek]);
+
+$proyek = $getProyek->fetch(PDO::FETCH_ASSOC);
+
+if (!$proyek) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Proyek tidak ditemukan'
+    ]);
+    return;
+}
+
+if (!$proyek['latitude'] || !$proyek['longitude']) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Koordinat proyek belum diatur'
+    ]);
+    return;
+}
+
+// HITUNG JARAK (Haversine)
+$earthRadius = 6371000;
+
+$dLat = deg2rad($proyek['latitude'] - $user_lat);
+$dLon = deg2rad($proyek['longitude'] - $user_lng);
+
+$a =
+    sin($dLat / 2) * sin($dLat / 2) +
+    cos(deg2rad($user_lat)) *
+    cos(deg2rad($proyek['latitude'])) *
+    sin($dLon / 2) * sin($dLon / 2);
+
+$c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+$jarak = $earthRadius * $c;
+
+if ($jarak > $proyek['radius_meter']) {
+
+    echo json_encode([
+        'success' => false,
+        'message' =>
+            'Anda berada di luar area proyek (' .
+            round($jarak) .
+            ' meter)'
+    ]);
+
+    return;
+}
+
+
             // Cek apakah sudah absen hari ini
             $check = $this->db->prepare("SELECT * FROM absensi WHERE id_karyawan = ? AND tanggal = ?");
             $check->execute([$id_karyawan, $tanggal]);
