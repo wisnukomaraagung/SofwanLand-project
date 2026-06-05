@@ -104,6 +104,8 @@ class ApiController {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+
+    
     
     public function registerFace() {
         try {
