@@ -260,7 +260,7 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
 
 <?php if (!$globalProjectId): ?>
 <div class="card text-center" style="padding: 40px; margin: 20px auto; max-width: 600px;">
-    <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+    <div style="font-size: 48px; margin-bottom: 20px;"></div>
     <h2>Belum Ada Proyek yang Dipilih</h2>
     <p class="text-muted" style="margin-top: 10px; margin-bottom: 20px;">Silakan pilih proyek terlebih dahulu pada Dashboard untuk melihat data absensi.</p>
     <a href="<?= BASE_URL ?>/public/index.php?page=dashboard" class="btn btn-primary" style="text-decoration: none;">Pilih Proyek di Dashboard</a>
@@ -301,8 +301,8 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
     </div>
 
     <div class="tab-absensi">
-        <button class="tab-absensi-btn active" data-tab="karyawan">👥 Daftar Karyawan</button>
-        <button class="tab-absensi-btn" data-tab="absensi">📋 Riwayat Absensi</button>
+        <button class="tab-absensi-btn active" data-tab="karyawan"> Daftar Karyawan</button>
+        <button class="tab-absensi-btn" data-tab="absensi"> Riwayat Absensi</button>
         <button class="tab-absensi-btn" data-tab="face">Absen</button>
     </div>
 
@@ -310,7 +310,7 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
     <div id="tab-karyawan" class="tab-pane active">
         <div class="card">
             <div class="card-header">
-                <span>👥 Daftar Karyawan</span>
+                <span> Daftar Karyawan</span>
                 <button class="btn btn-primary btn-sm" onclick="openTambahKaryawan()">+ Tambah Karyawan</button>
             </div>
             <div class="table-wrap">
@@ -326,8 +326,8 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
     <div id="tab-absensi" class="tab-pane">
         <div class="card">
             <div class="card-header">
-                <span>📋 Riwayat Absensi</span>
-                <button class="btn btn-secondary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
+                <span> Riwayat Absensi</span>
+                <button class="btn btn-secondary btn-sm" onclick="exportExcel()"> Export Excel</button>
             </div>
             <div class="table-wrap">
                 <table class="table">
@@ -343,7 +343,7 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
         <div class="card">
             <div class="card-header">
                 <span>Absen</span>
-                <span style="font-size: 12px; margin-left: 15px;">✅ Absen Masuk (Otomatis/Manual) | ⚠️ Absen Keluar hanya oleh ADMIN</span>
+                <span style="font-size: 12px; margin-left: 15px;"> Absen Masuk (Otomatis/Manual) | ⚠️ Absen Keluar hanya oleh ADMIN</span>
             </div>
             <div class="card-body">
                 <input type="hidden" id="current-proyek-id" value="">
@@ -362,17 +362,17 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
                 </div>
                 
                 <div style="text-align: center;">
-                    <button id="start-camera" class="btn-camera">🎥 Mulai Kamera</button>
+                    <button id="start-camera" class="btn-camera"> Mulai Kamera</button>
                     <button id="stop-camera" class="btn-camera btn-camera-stop">Stop Kamera</button>
                     <button id="btnAbsenKeluar" class="btn btn-danger">
-    📤 Absen Keluar
+     Absen Keluar
 </button>
                 </div>
                 
                 <div id="detected-info" style="display: none; margin-top: 20px;">
                     <div class="detected-card">
                         <div style="display: flex; align-items: center; gap: 15px;">
-                            <span style="font-size: 40px;">👤</span>
+                            <span style="font-size: 40px;"></span>
                             <div><h3 id="detected-name" style="margin: 0;">-</h3><p id="detected-position" style="margin: 5px 0 0;">-</p></div>
                         </div>
                     </div>
@@ -383,15 +383,15 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
                     <input type="hidden" id="face-snapshot">
                     
                     <div class="form-group">
-                        <label>⏰ Absen Masuk</label>
+                        <label> Absen Masuk</label>
                         <div style="display: flex; gap: 10px;">
-                            <button type="button" id="btn-manual-masuk" class="btn-camera btn-manual" style="flex:1;">📥 Absen Masuk MANUAL</button>
+                            <button type="button" id="btn-manual-masuk" class="btn-camera btn-manual" style="flex:1;"> Absen Masuk MANUAL</button>
                         </div>
-                        <small>✅ Atau biarkan wajah terdeteksi untuk ABSEN OTOMATIS</small>
+                        <small> Atau biarkan wajah terdeteksi untuk ABSEN OTOMATIS</small>
                     </div>
                     
                     <div class="form-group">
-                        <label>📋 Status</label>
+                        <label> Status</label>
                         <select id="status" class="form-control">
                             <option value="hadir">Hadir</option>
                             <option value="izin">Izin</option>
@@ -400,11 +400,11 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
                     </div>
                     
                     <div class="form-group">
-                        <label>📝 Keterangan</label>
+                        <label> Keterangan</label>
                         <textarea id="keterangan" rows="2" class="form-control" placeholder="Contoh: Terlambat..."></textarea>
                     </div>
                     
-                    <button id="submit-absen" class="btn btn-primary" style="width: 100%;" disabled>📥 Konfirmasi Absen Masuk</button>
+                    <button id="submit-absen" class="btn btn-primary" style="width: 100%;" disabled> Konfirmasi Absen Masuk</button>
                 </div>
                 
                 <div id="status-message" style="margin-top: 15px; padding: 10px; border-radius: 8px; display: none;"></div>
@@ -438,7 +438,7 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
             <div class="form-group"><label>Lembur (jam)</label><input type="number" id="edit_lembur" step="0.5" class="form-control" value="0"></div>
             <div class="form-group"><label>Status</label><select id="edit_status" class="form-control"><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option></select></div>
             <div class="form-group"><label>Keterangan</label><textarea id="edit_keterangan" rows="2" class="form-control"></textarea></div>
-            <button type="submit" class="btn btn-primary" style="width:100%">💾 Simpan Perubahan</button>
+            <button type="submit" class="btn btn-primary" style="width:100%"> Simpan Perubahan</button>
         </form>
     </div>
 </div>
@@ -446,12 +446,12 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
 <!-- Modal Register Wajah -->
 <div id="modal-register-face" class="modal" style="display: none;">
     <div class="modal-content">
-        <div class="modal-header"><span>📸 Register Wajah</span><span class="close" onclick="closeModalRegister()">&times;</span></div>
+        <div class="modal-header"><span> Register Wajah</span><span class="close" onclick="closeModalRegister()">&times;</span></div>
         <div class="modal-body">
             <p>Karyawan: <strong id="register-nama"></strong></p>
             <input type="hidden" id="register-karyawan-id">
             <video id="register-video" autoplay muted playsinline style="width:100%; border-radius:8px;"></video>
-            <button id="capture-face" class="btn btn-primary" style="margin-top:15px; width:100%">📸 Ambil & Register Wajah</button>
+            <button id="capture-face" class="btn btn-primary" style="margin-top:15px; width:100%"> Ambil & Register Wajah</button>
         </div>
     </div>
 </div>
@@ -472,6 +472,23 @@ let registerStream = null;
 let registerVideo = null;
 let lastAutoAbsenTime = 0;
 const AUTO_ABSEN_COOLDOWN = 60000;
+
+// ==================== UTIL: HITUNG JARAK ====================
+function hitungJarak(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
 
 // ==================== LOAD DAFTAR PROYEK ====================
 function loadProyek() {
@@ -511,8 +528,8 @@ function pilihProyek(id) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('detail-nama-proyek').innerHTML = `🏗️ ${data.data.nama_proyek}`;
-                document.getElementById('detail-lokasi').innerHTML = `📍 ${data.data.lokasi || '-'}`;
+                document.getElementById('detail-nama-proyek').innerHTML = ` ${data.data.nama_proyek}`;
+                document.getElementById('detail-lokasi').innerHTML = ` ${data.data.lokasi || '-'}`;
             }
         });
     
