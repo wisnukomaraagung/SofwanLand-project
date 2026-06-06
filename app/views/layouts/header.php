@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
@@ -26,18 +27,49 @@
     <div class="navbar-menu" id="navMenu">
         <?php
         $currentPage = $_GET['page'] ?? 'dashboard';
-        $menuItems   = getMenuForRole();
         $hasProject  = !empty($_SESSION['selected_project_id']);
+        $role        = $_SESSION['user_role'] ?? 'user';
 
-        // Pages that require a project to be selected first
+        // Jika ada proyek aktif, tampilkan menu khusus proyek.
+        if ($hasProject) {
+                if ($role === 'user') {
+                $menuItems = [
+                    'absensi' => ['icon' => '◩', 'label' => 'Absensi'],
+                ];
+            } else {
+                $menuItems = [
+                    'proyek'   => ['icon' => '◫', 'label' => 'Proyek'],
+                    'keuangan' => ['icon' => '◪', 'label' => 'Keuangan'],
+                    'absensi'  => ['icon' => '◩', 'label' => 'Absensi'],
+                    'barang'   => ['icon' => '◧', 'label' => 'Barang'],
+                ];
+            }
+        } else {
+            $menuItems = getMenuForRole();
+            // Jika sedang di halaman Dashboard utama tanpa proyek aktif, sembunyikan menu yang terkait proyek
+            $projectRequired = ['absensi', 'barang', 'keuangan', 'proyek'];
+            if ($currentPage === 'dashboard' && !$hasProject) {
+                foreach ($projectRequired as $k) {
+                    if (isset($menuItems[$k])) unset($menuItems[$k]);
+                }
+            }
+        }
+
+        // Pages that require a project to be selected first (for non-project view)
         $projectRequired = ['absensi', 'barang', 'keuangan', 'proyek'];
 
         foreach ($menuItems as $key => $item):
-            // Skip project-gated pages if no project is selected
-            if (in_array($key, $projectRequired) && !$hasProject) continue;
+            // Jika tidak ada proyek, batasi halaman yang memerlukan proyek hanya untuk role `user`.
+            if (in_array($key, $projectRequired) && !$hasProject && $role === 'user') continue;
             $isActive = ($currentPage === $key) ? 'active' : '';
+            $href = BASE_URL . '/public/index.php?page=' . $key;
+            // Jika menu proyek diklik dan proyek aktif, langsung ke detail proyek
+            if ($key === 'proyek' && $hasProject) {
+                $pid = (int)($_SESSION['selected_project_id'] ?? 0);
+                if ($pid) $href .= '&action=detail&id=' . $pid;
+            }
         ?>
-        <a href="<?= BASE_URL ?>/public/index.php?page=<?= $key ?>" class="nav-link <?= $isActive ?>">
+        <a href="<?= $href ?>" class="nav-link <?= $isActive ?>">
             <span class="nav-icon"><?= $item['icon'] ?></span>
             <?= $item['label'] ?>
         </a>
@@ -60,7 +92,7 @@
         </span>
         <?php endif; ?>
 
-        <a href="<?= BASE_URL ?>/public/index.php?page=login&action=logout" class="nav-link" style="color: #c0392b; font-weight: 600;" onclick="return confirm('Apakah Anda yakin ingin logout?');">
+        <a id="logoutBtn" href="<?= BASE_URL ?>/public/index.php?page=login&action=logout" class="nav-link" style="color: #c0392b; font-weight: 600;">
             <span class="nav-icon">🚪</span>
             Logout
         </a>

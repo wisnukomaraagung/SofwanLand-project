@@ -183,7 +183,8 @@ try {
             
         // ============ STORE ABSENSI ============
         case 'storeAbsensi':
-            if (!roleCanManage('absensi')) {
+            // Allow any role that can access the Absensi page (including `user`) to store attendance
+            if (!roleCanAccessPage('absensi')) {
                 echo json_encode(['success' => false, 'message' => 'Akses ditolak.']);
                 break;
             }

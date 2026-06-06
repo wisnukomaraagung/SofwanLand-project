@@ -11,7 +11,7 @@ $selectedProjectName = $_SESSION['selected_project_name'] ?? null;
 
 <?php if ($role === 'manager'): ?>
 
-<!-- STAT CARDS -->
+<!-- STAT CARDS - DI BAGIAN ATAS -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-label">Total Proyek</div>
@@ -39,33 +39,9 @@ $selectedProjectName = $_SESSION['selected_project_name'] ?? null;
     </div>
 </div>
 
-<!-- CHARTS -->
-<div class="charts-grid">
-    <div class="card">
-        <div class="card-header">
-            <span class="card-title">Biaya Pengeluaran per Bulan</span>
-        </div>
-        <div class="card-body">
-            <div class="chart-container">
-                <canvas id="chartBiaya"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-header">
-            <span class="card-title">Progress Setiap Proyek</span>
-        </div>
-        <div class="card-body">
-            <div class="chart-container">
-                <canvas id="chartProgress"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
+<?php endif; ?>
 
-<?php endif; /* end manager-only charts */ ?>
-
-<!-- DAFTAR PROYEK (Semua Role) -->
+<!-- DAFTAR PROYEK (Semua Role) - DI BAGIAN TENGAH -->
 <div class="card">
     <div class="card-header">
         <span class="card-title">Daftar Proyek</span>
@@ -137,6 +113,34 @@ $selectedProjectName = $_SESSION['selected_project_name'] ?? null;
         </table>
     </div>
 </div>
+
+<?php if ($role === 'manager'): ?>
+
+<!-- CHARTS - DI BAGIAN BAWAH -->
+<div class="charts-grid">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Biaya Pengeluaran per Bulan</span>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="chartBiaya"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Progress Setiap Proyek</span>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="chartProgress"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php endif; /* end manager-only charts */ ?>
 
 <?php if ($role === 'manager'): ?>
 <script>

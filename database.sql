@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     nama VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('admin','manager','staff') DEFAULT 'staff',
+    role ENUM('admin','manager','user') DEFAULT 'user',
     status ENUM('aktif','nonaktif') DEFAULT 'aktif',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS dokumentasi (
 INSERT INTO users (nama, email, password, role, status) VALUES
 ('Admin Kontraktor', 'admin@sofwan.com', 'admin123', 'admin', 'aktif'),
 ('Manajer Proyek', 'manager@sofwan.com', 'manager123', 'manager', 'aktif'),
-('Staff Keuangan', 'staff@sofwan.com', 'staff123', 'staff', 'aktif');
+('Pekerja', 'user@sofwan.com', 'user123', 'user', 'aktif');
 
 INSERT INTO proyek (nama_proyek, lokasi, tanggal_mulai, tanggal_selesai, nilai_kontrak, status, deskripsi) VALUES
 ('Pembangunan Gedung Perkantoran A', 'Jl. Sudirman No. 45, Jakarta', '2024-01-15', '2024-12-31', 2500000000, 'aktif', 'Pembangunan gedung 5 lantai untuk perkantoran'),

@@ -3,7 +3,7 @@
 
 function getUserRole(): string
 {
-    return $_SESSION['user_role'] ?? 'staff';
+    return $_SESSION['user_role'] ?? 'user';
 }
 
 function getRolePermissions(): array
@@ -33,11 +33,13 @@ function getRolePermissions(): array
             'manage' => ['proyek', 'keuangan'],
             'dashboard_subtitle' => 'Pantau proyek dan laporan keuangan',
         ],
-        'staff' => [
-            'pages' => [],
-            'menu' => [],
+        'user' => [
+            'pages' => ['absensi'],
+            'menu' => [
+                'absensi' => ['icon' => '◩', 'label' => 'Absensi'],
+            ],
             'manage' => [],
-            'dashboard_subtitle' => '',
+            'dashboard_subtitle' => 'Akses terbatas: hanya absensi',
         ],
     ];
 }
@@ -89,7 +91,7 @@ function getRoleLabel(?string $role = null): string
     $labels = [
         'admin'   => 'Administrator',
         'manager' => 'Manager',
-        'staff'   => 'Staff',
+        'user'    => 'Pekerja',
     ];
 
     return $labels[$role ?? getUserRole()] ?? 'Pengguna';

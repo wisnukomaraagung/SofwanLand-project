@@ -54,12 +54,8 @@ class DashboardController {
             $_SESSION['flash'] = ['type' => 'error', 'message' => 'Proyek tidak ditemukan!'];
         }
         
-        $referrer = $_SERVER['HTTP_REFERER'] ?? '';
-        if ($referrer && strpos($referrer, $_SERVER['HTTP_HOST']) !== false) {
-            header('Location: ' . $referrer);
-        } else {
-            header('Location: ' . BASE_URL . '/public/index.php?page=dashboard');
-        }
+        // After selecting a project, go directly to the project dashboard/detail
+        header('Location: ' . BASE_URL . '/public/index.php?page=proyek&action=detail&id=' . (int)$proyek['id']);
         exit;
     }
 
@@ -68,12 +64,8 @@ class DashboardController {
         unset($_SESSION['selected_project_name']);
         $_SESSION['flash'] = ['type' => 'success', 'message' => 'Filter proyek berhasil dinonaktifkan.'];
         
-        $referrer = $_SERVER['HTTP_REFERER'] ?? '';
-        if ($referrer && strpos($referrer, $_SERVER['HTTP_HOST']) !== false) {
-            header('Location: ' . $referrer);
-        } else {
-            header('Location: ' . BASE_URL . '/public/index.php?page=dashboard');
-        }
+        // Selalu kembali ke dashboard utama
+        header('Location: ' . BASE_URL . '/public/index.php?page=dashboard');
         exit;
     }
 }

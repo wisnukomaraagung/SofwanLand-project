@@ -42,11 +42,8 @@ class LoginController {
             $user = $stmt->fetch();
 
             if ($user && $password === $user['password']) {
-                if (!in_array($user['role'], ['admin', 'manager'], true)) {
-                    $_SESSION['error'] = 'Akun ini tidak memiliki akses ke sistem.';
-                    header('Location: ' . BASE_URL . '/public/index.php?page=login');
-                    exit;
-                }
+                // Allow admin, manager, and pekerja (user) roles to login.
+                // Role-based access control enforced elsewhere.
 
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['nama'] = $user['nama'];
