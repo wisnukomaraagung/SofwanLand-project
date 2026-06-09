@@ -16,22 +16,6 @@ $proyekList = (new ProyekModel())->getAll();
 $canManageBarang = roleCanManage('barang');
 ?>
 
-<div class="project-switch-bar">
-    <div class="project-switch-info">
-        <span>Proyek aktif:</span>
-        <strong><?= htmlspecialchars($_SESSION['selected_project_name'] ?? '-') ?></strong>
-    </div>
-    <form class="project-switch-form" action="<?= BASE_URL ?>/public/index.php" method="get">
-        <input type="hidden" name="page" value="dashboard">
-        <input type="hidden" name="action" value="selectProject">
-        <select name="id" class="project-switch-select" aria-label="Pilih Proyek Baru">
-            <?php foreach ($proyekList as $proyek): ?>
-                <option value="<?= $proyek['id'] ?>" <?= $proyek['id'] == $globalProjectId ? 'selected' : '' ?>><?= htmlspecialchars($proyek['nama_proyek']) ?></option>
-            <?php endforeach; ?>
-        </select>
-        <button type="submit" class="btn btn-secondary btn-sm">Ganti Proyek</button>
-    </form>
-</div>
 
 <!-- SUMMARY CARDS -->
 <div class="stats-grid">
