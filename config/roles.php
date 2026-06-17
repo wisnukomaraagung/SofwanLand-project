@@ -10,7 +10,7 @@ function getRolePermissions(): array
 {
     return [
         'admin' => [
-            'pages' => ['dashboard', 'absensi', 'barang', 'proyek', 'keuangan'],
+            'pages' => ['dashboard', 'absensi', 'barang', 'proyek', 'keuangan', ],
             'menu' => [
                 'dashboard' => ['icon' => '◈', 'label' => 'Dashboard'],
                 'proyek'    => ['icon' => '◫', 'label' => 'Proyek'],
@@ -18,14 +18,15 @@ function getRolePermissions(): array
                 'absensi'   => ['icon' => '◩', 'label' => 'Absensi'],
                 'barang'    => ['icon' => '◧', 'label' => 'Barang'],
             ],
-            'manage' => ['absensi', 'barang'],
+            'manage' => ['absensi', 'barang', 'pekerjaan',],
             'dashboard_subtitle' => 'Kelola absensi, persediaan barang, dan proyek',
         ],
         'manager' => [
-            'pages' => ['dashboard', 'proyek', 'keuangan', 'barang', 'absensi'],
+            'pages' => ['dashboard', 'proyek', 'keuangan', 'barang', 'absensi', ],
             'menu' => [
                 'dashboard' => ['icon' => '◈', 'label' => 'Dashboard'],
                 'proyek'    => ['icon' => '◫', 'label' => 'Proyek'],
+
                 'keuangan'  => ['icon' => '◪', 'label' => 'Keuangan'],
                 'absensi'   => ['icon' => '◩', 'label' => 'Absensi'],
                 'barang'    => ['icon' => '◧', 'label' => 'Barang'],

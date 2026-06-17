@@ -59,6 +59,8 @@ $routes = [
     'barang'    => 'BarangController',
     'absensi'   => 'AbsensiController',
     'keuangan'  => 'KeuanganController',
+    'pekerjaan' => 'PekerjaanController',
+     'kurva_s'   => 'KurvaSController', 
 ];
 
 // Access control middleware
@@ -101,6 +103,8 @@ if (isset($routes[$page])) {
     elseif ($action === 'updateKeluar') $controller->updateKeluar((int)$id);
     elseif ($action === 'deleteKeluar') $controller->deleteKeluar((int)$id);
     elseif ($action === 'viewBukti')   $controller->viewBukti();
+    elseif ($action === 'updateProgressAjax') $controller->updateProgressAjax();
+
     elseif ($action === 'selectProject') {
         $dash = new DashboardController();
         $dash->selectProject();

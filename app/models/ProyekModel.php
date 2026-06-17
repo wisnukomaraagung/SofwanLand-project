@@ -82,19 +82,18 @@ class ProyekModel {
 
     public function getPekerjaanProyek($id_proyek)
     {
-        $db = Database::getConnection();
-
-        $query = $db->prepare("
-            SELECT *
-            FROM pekerjaan_proyek
-            WHERE id_proyek = ?
-            ORDER BY id ASC
+        $stmt = $this->db->prepare("
+        SELECT *
+        FROM pekerjaan_proyek
+        WHERE id_proyek = ?
+        ORDER BY id ASC
         ");
+        
+        $stmt->execute([$id_proyek]);
 
-        $query->execute([$id_proyek]);
-
-        return $query->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    
     public function getProgressHistory(int $id): array {
         $stmt = $this->db->prepare(
             "SELECT * FROM progress WHERE id_proyek = ? ORDER BY tanggal DESC LIMIT 10"

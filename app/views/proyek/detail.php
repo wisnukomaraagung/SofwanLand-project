@@ -162,15 +162,16 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
         </div>
     </div>
 
-    <!-- Tombol Aksi -->
+   <!-- Tombol Aksi -->
     <div class="action-buttons" style="display: flex; gap: 10px; margin: 20px 0; align-items: center; flex-wrap: wrap;">
         <?php if (roleCanManage('proyek')): ?>
         <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=edit&id=<?= $proyek['id'] ?? '' ?>" class="btn btn-primary"><i class="ri-edit-line"></i> Edit Proyek</a>
         <a href="javascript:void(0)"
-           onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=proyek&action=delete&id=<?= $proyek['id'] ?? '' ?>', '<?= htmlspecialchars($proyek['nama_proyek'] ?? '', ENT_QUOTES) ?>')"
-           class="btn" style="background:#e74c3c; color:white;"><i class="ri-delete-bin-line"></i> Hapus Proyek</a>
+        onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=proyek&action=delete&id=<?= $proyek['id'] ?? '' ?>', '<?= htmlspecialchars($proyek['nama_proyek'] ?? '', ENT_QUOTES) ?>')"
+        class="btn" style="background:#e74c3c; color:white;"><i class="ri-delete-bin-line"></i> Hapus Proyek</a>
         <?php endif; ?>
-        <a href="<?= BASE_URL ?>/public/index.php?page=keuangan" class="btn btn-outline"><i class="ri-add-line"></i> Tambah Pengeluaran</a>
+        
+        <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&id_proyek=<?= $proyek['id'] ?? '' ?>" class="btn btn-outline"><i class="ri-add-line"></i> Tambah Pengeluaran</a>
     </div>
 
     <!-- Tabs -->
@@ -181,7 +182,300 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
         <div class="tab" data-tab="rincian"><i class="ri-list-check-2"></i> Pekerjaan</div>
         <div class="tab" data-tab="dokumentasi"><i class="ri-image-line"></i> Dokumentasi</div>
         <div class="tab" data-tab="analytics"><i class="ri-bar-chart-2-line"></i> Analytics</div>
+        <div class="tab" data-tab="rab"><i class="ri-clipboard-line"></i> RAB & Pekerjaan</div>
+        <div class="tab" data-tab="kurva"><i class="ri-line-chart-line"></i> Kurva S</div>
     </div>
+
+    <!-- Tab RAB & Pekerjaan -->
+    <div class="tab-content" id="rab">
+        <?php
+        // Load PekerjaanModel
+        if (!class_exists('PekerjaanModel')) {
+            require_once BASE_PATH . '/app/models/PekerjaanModel.php';
+        }
+        $pekerjaanModel = new PekerjaanModel();
+        $pekerjaanList = $pekerjaanModel->getByProyekId($proyek['id']);
+        $summaryPekerjaan = $pekerjaanModel->getSummary($proyek['id']);
+        ?>
+        
+        <!-- Summary Cards -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+            <div class="stat-card" style="text-align: center;">
+                <div class="stat-value"><?= $summaryPekerjaan['total_pekerjaan'] ?></div>
+                <div class="stat-label">Total Pekerjaan</div>
+            </div>
+            <div class="stat-card" style="text-align: center;">
+                <div class="stat-value" style="color: #16a34a;"><?= $summaryPekerjaan['selesai'] ?></div>
+                <div class="stat-label">Selesai</div>
+            </div>
+            <div class="stat-card" style="text-align: center;">
+                <div class="stat-value" style="color: #f59e0b;"><?= $summaryPekerjaan['dalam_proses'] ?></div>
+                <div class="stat-label">Dalam Proses</div>
+            </div>
+            <div class="stat-card" style="text-align: center;">
+                <div class="stat-value">Rp <?= number_format(($summaryPekerjaan['total_nilai_rab'] ?? 0) / 1000000, 1) ?>M</div>
+                <div class="stat-label">Total RAB</div>
+            </div>
+        </div>
+        
+        <!-- Tombol Tambah -->
+        <?php if (roleCanManage('pekerjaan')): ?>
+        <div style="margin-bottom: 20px;">
+            <a href="<?= BASE_URL ?>/public/index.php?page=pekerjaan&action=create&id_proyek=<?= $proyek['id'] ?>" class="btn btn-primary">
+                <i class="ri-add-line"></i> Tambah Pekerjaan
+            </a>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Tabel Pekerjaan -->
+        <div class="chart-card">
+            <div class="chart-title">Daftar Pekerjaan (RAB)</div>
+            <div class="table-wrap" style="overflow-x: auto;">
+                <table class="custom-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nama Pekerjaan</th>
+                            <th>Bobot</th>
+                            <th>Nilai</th>
+                            <th>Progress</th>
+                            <th>Status</th>
+                            <?php if (roleCanManage('pekerjaan')): ?><th>Aksi</th><?php endif; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($pekerjaanList)): ?>
+                        <tr>
+                            <td colspan="<?= roleCanManage('pekerjaan') ? 7 : 6 ?>" style="text-align: center; padding: 40px;">
+                                Belum ada data pekerjaan.
+                                <?php if (roleCanManage('pekerjaan')): ?>
+                                <a href="<?= BASE_URL ?>/public/index.php?page=pekerjaan&action=create&id_proyek=<?= $proyek['id'] ?>">Tambah sekarang</a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php else: ?>
+                        <?php foreach ($pekerjaanList as $i => $p): ?>
+                        <tr>
+                            <td><?= $i + 1 ?></td>
+                            <td><strong><?= htmlspecialchars($p['nama_pekerjaan']) ?></strong></td>
+                            <td><?= number_format($p['bobot'], 2) ?>%</td>
+                            <td>Rp <?= number_format($p['nilai_pekerjaan'], 0, ',', '.') ?></td>
+                            <td style="min-width: 120px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="progress-bar" style="flex: 1; height: 8px;">
+                                        <div class="progress-fill" style="width: <?= $p['progress_pekerjaan'] ?>%;"></div>
+                                    </div>
+                                    <span style="font-size: 12px;"><?= $p['progress_pekerjaan'] ?>%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-status" style="background: <?= $p['status_pekerjaan'] == 'selesai' ? '#dcfce7' : ($p['status_pekerjaan'] == 'dalam_proses' ? '#fef3c7' : '#f1f5f9'); ?>; color: <?= $p['status_pekerjaan'] == 'selesai' ? '#16a34a' : ($p['status_pekerjaan'] == 'dalam_proses' ? '#d97706' : '#64748b'); ?>">
+                                    <?= $p['status_pekerjaan'] == 'selesai' ? 'Selesai' : ($p['status_pekerjaan'] == 'dalam_proses' ? 'Dalam Proses' : 'Belum Mulai') ?>
+                                </span>
+                            </td>
+                            <?php if (roleCanManage('pekerjaan')): ?>
+                            <td>
+                                <div style="display: flex; gap: 6px;">
+                                    <a href="<?= BASE_URL ?>/public/index.php?page=pekerjaan&action=edit&id=<?= $p['id'] ?>" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;">Edit</a>
+                                    <a href="javascript:void(0)" onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=pekerjaan&action=delete&id=<?= $p['id'] ?>', '<?= htmlspecialchars($p['nama_pekerjaan']) ?>')" class="btn" style="background: #dc2626; color: white; padding: 5px 10px; font-size: 12px;">Hapus</a>
+                                </div>
+                            </td>
+                            <?php endif; ?>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Kurva S -->
+    <div class="tab-content" id="kurva">
+        <?php
+        // Load ProgressMingguanModel
+        if (!class_exists('ProgressMingguanModel')) {
+            require_once BASE_PATH . '/app/models/ProgressMingguanModel.php';
+        }
+        $progressMingguanModel = new ProgressMingguanModel();
+        $kurvaData = $progressMingguanModel->getKurvaSData($proyek['id']);
+        $progressList = $progressMingguanModel->getByProyekId($proyek['id']);
+        
+        // Hitung statistik
+        $totalTarget = array_sum(array_column($kurvaData, 'target_rencana'));
+        $totalRealisasi = array_sum(array_column($kurvaData, 'realisasi'));
+        $selisihAkhir = !empty($kurvaData) ? end($kurvaData)['selisih'] : 0;
+        ?>
+        
+        <!-- Summary Cards -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+            <div class="stat-card" style="text-align: center;">
+                <div class="stat-value"><?= count($kurvaData) ?></div>
+                <div class="stat-label">Total Minggu</div>
+            </div>
+            <div class="stat-card" style="text-align: center;">
+                <div class="stat-value"><?= round($totalTarget, 1) ?>%</div>
+                <div class="stat-label">Target Akhir</div>
+            </div>
+            <div class="stat-card" style="text-align: center;">
+                <div class="stat-value" style="color: <?= $selisihAkhir >= 0 ? '#16a34a' : '#dc2626'; ?>">
+                    <?= round($totalRealisasi, 1) ?>%
+                </div>
+                <div class="stat-label">Realisasi Akhir</div>
+            </div>
+            <div class="stat-card" style="text-align: center;">
+                <div class="stat-value" style="color: <?= $selisihAkhir >= 0 ? '#16a34a' : '#dc2626'; ?>">
+                    <?= $selisihAkhir >= 0 ? '+' : '' ?><?= round($selisihAkhir, 1) ?>%
+                </div>
+                <div class="stat-label">Selisih</div>
+            </div>
+        </div>
+        
+        <!-- Tombol Tambah -->
+        <?php if (roleCanManage('kurva_s')): ?>
+        <div style="margin-bottom: 20px;">
+            <a href="<?= BASE_URL ?>/public/index.php?page=kurva_s&action=create&id_proyek=<?= $proyek['id'] ?>" class="btn btn-primary">
+                <i class="ri-add-line"></i> Tambah Data Mingguan
+            </a>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Grafik Kurva S -->
+        <div class="chart-card">
+            <div class="chart-title">📈 Kurva S - Progress Rencana vs Realisasi</div>
+            <?php if (empty($kurvaData)): ?>
+            <div class="alert-box info" style="text-align: center; padding: 60px;">
+                Belum ada data progress mingguan untuk Kurva S.
+                <?php if (roleCanManage('kurva_s')): ?>
+                <a href="<?= BASE_URL ?>/public/index.php?page=kurva_s&action=create&id_proyek=<?= $proyek['id'] ?>">Tambah sekarang</a>
+                <?php endif; ?>
+            </div>
+            <?php else: ?>
+            <div style="height: 350px;">
+                <canvas id="kurvaSChartProyek"></canvas>
+            </div>
+            <?php endif; ?>
+        </div>
+        
+        <!-- Tabel Data Mingguan -->
+        <?php if (!empty($progressList)): ?>
+        <div class="chart-card" style="margin-top: 20px;">
+            <div class="chart-title">Data Progress Mingguan</div>
+            <div class="table-wrap" style="overflow-x: auto;">
+                <table class="custom-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Minggu</th>
+                            <th>Target</th>
+                            <th>Realisasi</th>
+                            <th>Selisih</th>
+                            <th>Periode</th>
+                            <?php if (roleCanManage('kurva_s')): ?><th>Aksi</th><?php endif; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($progressList as $p): 
+                            $selisih = $p['realisasi'] - $p['target_rencana'];
+                        ?>
+                        <tr>
+                            <td><strong>Minggu <?= $p['minggu_ke'] ?></strong></td>
+                            <td><?= number_format($p['target_rencana'], 1) ?>%</td>
+                            <td><?= number_format($p['realisasi'], 1) ?>%</td>
+                            <td style="color: <?= $selisih >= 0 ? '#16a34a' : '#dc2626' ?>;">
+                                <?= $selisih >= 0 ? '+' : '' ?><?= number_format($selisih, 1) ?>%
+                            </td>
+                            <td style="font-size: 12px;">
+                                <?= date('d/m/Y', strtotime($p['tanggal_mulai'])) ?> - 
+                                <?= date('d/m/Y', strtotime($p['tanggal_selesai'])) ?>
+                            </td>
+                            <?php if (roleCanManage('kurva_s')): ?>
+                            <td>
+                                <div style="display: flex; gap: 6px;">
+                                    <a href="<?= BASE_URL ?>/public/index.php?page=kurva_s&action=edit&id=<?= $p['id'] ?>" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;">Edit</a>
+                                    <a href="javascript:void(0)" onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=kurva_s&action=delete&id=<?= $p['id'] ?>', 'minggu ke-<?= $p['minggu_ke'] ?>')" class="btn" style="background: #dc2626; color: white; padding: 5px 10px; font-size: 12px;">Hapus</a>
+                                </div>
+                            </td>
+                            <?php endif; ?>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+
+<script>
+// Chart untuk Kurva S (tambahkan di bagian script yang sudah ada)
+<?php if (!empty($kurvaData)): ?>
+const kurvaDataProyek = <?= json_encode($kurvaData) ?>;
+const labelsProyek = kurvaDataProyek.map(item => 'Minggu ' + item.minggu_ke);
+const targetDataProyek = kurvaDataProyek.map(item => parseFloat(item.target_rencana));
+const realisasiDataProyek = kurvaDataProyek.map(item => parseFloat(item.realisasi));
+
+if(document.getElementById('kurvaSChartProyek')) {
+    new Chart(document.getElementById('kurvaSChartProyek').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: labelsProyek,
+            datasets: [
+                {
+                    label: 'Rencana (Target)',
+                    data: targetDataProyek,
+                    borderColor: '#2563eb',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#2563eb',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: 'Realisasi (Aktual)',
+                    data: realisasiDataProyek,
+                    borderColor: '#16a34a',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#16a34a',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.raw.toFixed(1) + '%';
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: { callback: v => v + '%' },
+                    title: { display: true, text: 'Progress Kumulatif (%)' }
+                },
+                x: {
+                    title: { display: true, text: 'Periode (Minggu)' }
+                }
+            }
+        }
+    });
+}
+<?php endif; ?>
+</script>
 
     <!-- Tab Dashboard -->
     <div class="tab-content active" id="dashboard">
