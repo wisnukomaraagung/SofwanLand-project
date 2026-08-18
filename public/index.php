@@ -95,6 +95,7 @@ if (isset($routes[$page])) {
     elseif ($action === 'delete')       $controller->delete((int)$id);
     elseif ($action === 'exportMasukExcel') $controller->exportMasukExcel();
     elseif ($action === 'exportKeluarExcel') $controller->exportKeluarExcel();
+    elseif ($action === 'exportLaporanExcel') $controller->exportLaporanExcel();
     elseif ($action === 'exportExcel')  $controller->exportExcel();
     elseif ($action === 'editMasuk')    $controller->editMasuk((int)$id);
     elseif ($action === 'updateMasuk')  $controller->updateMasuk((int)$id);

@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS laporan_keuangan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_proyek INT NOT NULL,
     tipe ENUM('pemasukan','pengeluaran') NOT NULL,
+    kategori VARCHAR(100) DEFAULT NULL,
     jumlah DECIMAL(15,2) NOT NULL,
     sumber VARCHAR(255) DEFAULT NULL,
     keterangan TEXT,
