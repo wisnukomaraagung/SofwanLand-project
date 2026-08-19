@@ -79,39 +79,43 @@ if (!in_array($activeTab, ['masuk', 'keluar', 'laporan'], true)) $activeTab = 'm
     <?php endif; ?>
 
     <!-- TABEL RIWAYAT MASUK -->
-    <div class="card">
-        <div class="card-header">
-            <span class="card-title">Riwayat Pemasukan</span>
-            <a href="?page=keuangan&action=exportMasukExcel" class="btn btn-secondary btn-sm" style="text-decoration:none;">↓ Excel</a>
+    <div class="card" style="border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;">
+        <div class="card-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
+            <span class="card-title" style="font-weight: 600; color: #334155; font-size: 14px; letter-spacing: 0.2px;">Riwayat Pemasukan</span>
+            <a href="?page=keuangan&action=exportMasukExcel" class="btn btn-secondary btn-sm" style="background: #ffffff; color: #334155; border: 1px solid #cbd5e1; text-decoration:none;">↓ Export Excel</a>
         </div>
-        <div class="table-wrap">
-            <table>
-                <thead>
+        <div class="table-wrap" style="padding: 0; margin: 0;">
+            <table style="margin: 0; border: none;">
+                <thead style="background: #ffffff;">
                     <tr>
-                        <th>#</th>
-                        <th>Tanggal</th>
-                        <th class="text-right">Jumlah</th>
-                        <th>Sumber</th>
-                        <th>Keterangan</th>
-                        <?php if ($canManage): ?><th>Aksi</th><?php endif; ?>
+                        <th style="width: 50px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">#</th>
+                        <th style="width: 120px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Tanggal</th>
+                        <th class="text-right" style="width: 150px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Jumlah</th>
+                        <th style="border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Sumber</th>
+                        <th style="border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Keterangan</th>
+                        <?php if ($canManage): ?><th style="width: 120px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Aksi</th><?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($masukList)): ?>
-                    <tr><td colspan="<?= $canManage ? 6 : 5 ?>" class="text-center text-muted" style="padding:32px">Belum ada riwayat pemasukan</td></tr>
+                    <tr><td colspan="<?= $canManage ? 6 : 5 ?>" class="text-center text-muted" style="padding: 30px; font-size: 13px; background: #ffffff;">Belum ada riwayat pemasukan</td></tr>
                     <?php else: ?>
                     <?php foreach ($masukList as $i => $lk): ?>
-                    <tr>
-                        <td class="text-muted"><?= $i + 1 ?></td>
-                        <td class="text-muted" style="font-size:12px"><?= date('d M Y', strtotime($lk['tanggal'])) ?></td>
-                        <td class="text-right fw-700" style="color:#27ae60">+ Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
-                        <td class="text-muted"><?= htmlspecialchars($lk['sumber'] ?? '—') ?></td>
-                        <td class="text-muted" style="font-size:12px"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
+                    <tr style="border-bottom: 1px solid #f1f5f9; background: #ffffff;">
+                        <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= $i + 1 ?></td>
+                        <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= date('d M Y', strtotime($lk['tanggal'])) ?></td>
+                        <td class="text-right fw-700" style="color:#27ae60; font-size: 13px; padding: 12px 20px;">+ Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
+                        <td style="font-size: 13px; color: #475569; padding: 12px 20px;"><?= htmlspecialchars($lk['sumber'] ?? '—') ?></td>
+                        <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
                         <?php if ($canManage): ?>
-                        <td>
-                            <a href="javascript:void(0)"
-                               onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=deleteMasuk&id=<?= (int)$lk['id'] ?>','pemasukan ini')"
-                               class="btn btn-danger btn-sm">Hapus</a>
+                        <td style="padding: 12px 20px;">
+                            <div style="display:flex; gap:6px;">
+                                <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&action=editMasuk&id=<?= (int)$lk['id'] ?>"
+                                   class="btn btn-sm" style="background: #ffffff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 4px;">Edit</a>
+                                <a href="javascript:void(0)"
+                                   onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=deleteMasuk&id=<?= (int)$lk['id'] ?>','pemasukan ini')"
+                                   class="btn btn-sm" style="background: #ffffff; color: #ef4444; border: 1px solid #fecaca; padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 4px;">Hapus</a>
+                            </div>
                         </td>
                         <?php endif; ?>
                     </tr>
@@ -209,61 +213,54 @@ if (!in_array($activeTab, ['masuk', 'keluar', 'laporan'], true)) $activeTab = 'm
         ?>
 
         <?php foreach ($groupedKeluar as $categoryName => $items): ?>
-        <div class="card mb-3" style="margin-top: 0;">
-            <div class="card-header" style="border-left: 4px solid <?php
-                $bg = '#7f8c8d';
-                if ($categoryName === 'Gaji') $bg = '#3498db';
-                elseif ($categoryName === 'Pembelian Material') $bg = '#e67e22';
-                elseif ($categoryName === 'Sewa Alat') $bg = '#1abc9c';
-                echo $bg;
-            ?>;">
-                <span class="card-title">
+        <div class="card mb-3" style="margin-top: 0; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;">
+            <div class="card-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
+                <span style="font-weight: 600; color: #334155; font-size: 14px; display: flex; align-items: center; gap: 10px; letter-spacing: 0.2px;">
                     <?php
-                    $icon = '📁';
-                    if ($categoryName === 'Gaji') $icon = '👤';
-                    elseif ($categoryName === 'Pembelian Material') $icon = '🧱';
-                    elseif ($categoryName === 'Sewa Alat') $icon = '⚙️';
-                    echo $icon . ' ' . $categoryName;
+                    $dotColor = '#94a3b8';
+                    if ($categoryName === 'Gaji') $dotColor = '#3b82f6';
+                    elseif ($categoryName === 'Pembelian Material') $dotColor = '#f59e0b';
+                    elseif ($categoryName === 'Sewa Alat') $dotColor = '#10b981';
                     ?>
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: <?= $dotColor ?>;"></span>
+                    <?= strtoupper($categoryName) ?>
                 </span>
-                <span class="badge" style="background:<?php
-                    $bg = '#7f8c8d';
-                    if ($categoryName === 'Gaji') $bg = '#3498db';
-                    elseif ($categoryName === 'Pembelian Material') $bg = '#e67e22';
-                    elseif ($categoryName === 'Sewa Alat') $bg = '#1abc9c';
-                    echo $bg;
-                ?>; color:#fff; font-size:11px; font-weight:700;">
+                <span style="background: #ffffff; color: #475569; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid #e2e8f0;">
                     Total: Rp <?= number_format(array_sum(array_column($items, 'jumlah')), 0, ',', '.') ?>
                 </span>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
+            <div class="table-wrap" style="padding: 0; margin: 0;">
+                <table style="margin: 0; border: none;">
+                    <thead style="background: #ffffff;">
                         <tr>
-                            <th style="width: 50px;">#</th>
-                            <th style="width: 120px;">Tanggal</th>
-                            <th class="text-right" style="width: 180px;">Jumlah</th>
-                            <th>Kepada / Tujuan</th>
-                            <th>Keterangan</th>
-                            <?php if ($canManage): ?><th style="width: 80px;">Aksi</th><?php endif; ?>
+                            <th style="width: 50px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">#</th>
+                            <th style="width: 120px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Tanggal</th>
+                            <th class="text-right" style="width: 150px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Jumlah</th>
+                            <th style="border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Kepada / Tujuan</th>
+                            <th style="border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Keterangan</th>
+                            <?php if ($canManage): ?><th style="width: 120px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Aksi</th><?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($items)): ?>
-                        <tr><td colspan="<?= $canManage ? 6 : 5 ?>" class="text-center text-muted" style="padding:16px;">Tidak ada transaksi untuk kategori ini</td></tr>
+                        <tr><td colspan="<?= $canManage ? 6 : 5 ?>" class="text-center text-muted" style="padding: 30px; font-size: 13px; background: #ffffff;">Tidak ada transaksi untuk kategori ini</td></tr>
                         <?php else: ?>
                         <?php foreach ($items as $i => $lk): ?>
-                        <tr>
-                            <td class="text-muted"><?= $i + 1 ?></td>
-                            <td class="text-muted" style="font-size:12px"><?= date('d M Y', strtotime($lk['tanggal'])) ?></td>
-                            <td class="text-right fw-700" style="color:#c0392b">- Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
-                            <td class="text-muted"><?= htmlspecialchars($lk['sumber'] ?? '—') ?></td>
-                            <td class="text-muted" style="font-size:12px"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
+                        <tr style="border-bottom: 1px solid #f1f5f9; background: #ffffff;">
+                            <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= $i + 1 ?></td>
+                            <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= date('d M Y', strtotime($lk['tanggal'])) ?></td>
+                            <td class="text-right" style="color: #334155; font-weight: 500; font-size: 13px; padding: 12px 20px;">Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
+                            <td style="font-size: 13px; color: #475569; padding: 12px 20px;"><?= htmlspecialchars($lk['sumber'] ?? '—') ?></td>
+                            <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
                             <?php if ($canManage): ?>
-                            <td>
-                                <a href="javascript:void(0)"
-                                   onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=deleteKeluar&id=<?= (int)$lk['id'] ?>','pengeluaran ini')"
-                                   class="btn btn-danger btn-sm">Hapus</a>
+                            <td style="padding: 12px 20px;">
+                                <div style="display:flex; gap:6px;">
+                                    <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&action=editKeluar&id=<?= (int)$lk['id'] ?>"
+                                       class="btn btn-sm" style="background: #ffffff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 4px;">Edit</a>
+                                    <a href="javascript:void(0)"
+                                       onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=deleteKeluar&id=<?= (int)$lk['id'] ?>','pengeluaran ini')"
+                                       class="btn btn-sm" style="background: #ffffff; color: #ef4444; border: 1px solid #fecaca; padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 4px;">Hapus</a>
+                                </div>
                             </td>
                             <?php endif; ?>
                         </tr>
@@ -303,31 +300,44 @@ foreach ($keluarList as $lk) {
 ?>
 
 <?php foreach ($groupedKeluar as $categoryName => $items): ?>
-<div class="card mt-3">
-    <div class="card-header" style="background:#f8f9fa; border-bottom:2px solid #bdc3c7; display:flex; justify-content:space-between; align-items:center;">
-        <span class="card-title" style="font-weight:700;">📁 <?= strtoupper($categoryName) ?></span>
-        <span class="badge" style="font-size:14px; padding:6px 12px; background:#c0392b; color:#fff; margin-left:auto;">
+<div class="card mb-3" style="margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;">
+    <div class="card-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
+        <span style="font-weight: 600; color: #334155; font-size: 14px; display: flex; align-items: center; gap: 10px; letter-spacing: 0.2px;">
+            <?php
+            $dotColor = '#94a3b8';
+            if ($categoryName === 'Gaji') $dotColor = '#3b82f6';
+            elseif ($categoryName === 'Pembelian Material') $dotColor = '#f59e0b';
+            elseif ($categoryName === 'Sewa Alat') $dotColor = '#10b981';
+            ?>
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: <?= $dotColor ?>;"></span>
+            <?= strtoupper($categoryName) ?>
+        </span>
+        <span style="background: #ffffff; color: #475569; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid #e2e8f0;">
             Total: Rp <?= number_format(array_sum(array_column($items, 'jumlah')), 0, ',', '.') ?>
         </span>
     </div>
-    <div class="table-wrap">
-        <table>
-            <thead>
+    <div class="table-wrap" style="padding: 0; margin: 0;">
+        <table style="margin: 0; border: none;">
+            <thead style="background: #ffffff;">
                 <tr>
-                    <th>No</th><th>Tanggal</th><th>Jumlah</th><th>Kepada / Tujuan</th><th>Keterangan</th>
+                    <th style="width: 50px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">No</th>
+                    <th style="width: 120px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Tanggal</th>
+                    <th class="text-right" style="width: 150px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Jumlah</th>
+                    <th style="border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Kepada / Tujuan</th>
+                    <th style="border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Keterangan</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($items)): ?>
-                <tr><td colspan="5" class="text-center text-muted" style="padding:24px">Tidak ada transaksi untuk kategori ini</td></tr>
+                <tr><td colspan="5" class="text-center text-muted" style="padding: 30px; font-size: 13px; background: #ffffff;">Tidak ada transaksi untuk kategori ini</td></tr>
                 <?php else: ?>
                 <?php foreach ($items as $k => $lk): ?>
-                <tr>
-                    <td class="text-muted"><?= $k + 1 ?></td>
-                    <td class="text-muted" style="font-size:12px"><?= date('d/m/Y', strtotime($lk['tanggal'])) ?></td>
-                    <td class="fw-700">Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
-                    <td class="text-muted"><?= htmlspecialchars($lk['sumber'] ?? '—') ?></td>
-                    <td class="text-muted" style="font-size:12px"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
+                <tr style="border-bottom: 1px solid #f1f5f9; background: #ffffff;">
+                    <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= $k + 1 ?></td>
+                    <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= date('d/m/Y', strtotime($lk['tanggal'])) ?></td>
+                    <td class="text-right" style="color: #334155; font-weight: 500; font-size: 13px; padding: 12px 20px;">Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
+                    <td style="font-size: 13px; color: #475569; padding: 12px 20px;"><?= htmlspecialchars($lk['sumber'] ?? '—') ?></td>
+                    <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
                 </tr>
                 <?php endforeach; ?>
                 <?php endif; ?>

@@ -128,6 +128,77 @@ class KeuanganController {
         header('Location: ' . $this->keuanganUrl('keluar')); exit;
     }
 
+    // ─── EDIT MASUK ──────────────────────────────────────────────────
+    public function editMasuk(int $id) {
+        requireManagerPermission('keuangan');
+        $data = $this->model->getById($id);
+        if (!$data || $data['tipe'] !== 'pemasukan') {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Data pemasukan tidak ditemukan.'];
+            header('Location: ' . $this->keuanganUrl('masuk')); exit;
+        }
+        $pageTitle = 'Edit Keuangan Masuk';
+        $pageSubtitle = 'Edit data pemasukan';
+        require BASE_PATH . '/app/views/keuangan/edit_masuk.php';
+    }
+
+    // ─── UPDATE MASUK ────────────────────────────────────────────────
+    public function updateMasuk(int $id) {
+        requireManagerPermission('keuangan');
+        $jumlah = floatval(str_replace(['.', ','], ['', '.'], $_POST['jumlah'] ?? 0));
+        if ($jumlah <= 0) {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Jumlah pemasukan wajib diisi dan harus lebih dari 0'];
+            header('Location: ' . BASE_URL . '/public/index.php?page=keuangan&action=editMasuk&id=' . $id); exit;
+        }
+        $data = [
+            'jumlah'     => $jumlah,
+            'sumber'     => trim($_POST['sumber'] ?? ''),
+            'keterangan' => trim($_POST['keterangan'] ?? ''),
+            'tanggal'    => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+        ];
+        if ($this->model->update($id, $data)) {
+            $_SESSION['flash'] = ['type'=>'success','message'=>'Data pemasukan berhasil diperbarui.'];
+        } else {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Gagal memperbarui data pemasukan.'];
+        }
+        header('Location: ' . $this->keuanganUrl('masuk')); exit;
+    }
+
+    // ─── EDIT KELUAR ─────────────────────────────────────────────────
+    public function editKeluar(int $id) {
+        requireManagerPermission('keuangan');
+        $data = $this->model->getById($id);
+        if (!$data || $data['tipe'] !== 'pengeluaran') {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Data pengeluaran tidak ditemukan.'];
+            header('Location: ' . $this->keuanganUrl('keluar')); exit;
+        }
+        $pageTitle = 'Edit Keuangan Keluar';
+        $pageSubtitle = 'Edit data pengeluaran';
+        require BASE_PATH . '/app/views/keuangan/edit_keluar.php';
+    }
+
+    // ─── UPDATE KELUAR ───────────────────────────────────────────────
+    public function updateKeluar(int $id) {
+        requireManagerPermission('keuangan');
+        $jumlah = floatval(str_replace(['.', ','], ['', '.'], $_POST['jumlah'] ?? 0));
+        if ($jumlah <= 0) {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Jumlah pengeluaran wajib diisi dan harus lebih dari 0'];
+            header('Location: ' . BASE_URL . '/public/index.php?page=keuangan&action=editKeluar&id=' . $id); exit;
+        }
+        $data = [
+            'jumlah'     => $jumlah,
+            'kategori'   => trim($_POST['kategori'] ?? ''),
+            'sumber'     => trim($_POST['sumber'] ?? ''),
+            'keterangan' => trim($_POST['keterangan'] ?? ''),
+            'tanggal'    => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
+        ];
+        if ($this->model->update($id, $data)) {
+            $_SESSION['flash'] = ['type'=>'success','message'=>'Data pengeluaran berhasil diperbarui.'];
+        } else {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Gagal memperbarui data pengeluaran.'];
+        }
+        header('Location: ' . $this->keuanganUrl('keluar')); exit;
+    }
+
     // ─── EXPORT MASUK EXCEL ──────────────────────────────────────────
     public function exportMasukExcel() {
         $idProyek = $_SESSION['selected_project_id'] ?? null;

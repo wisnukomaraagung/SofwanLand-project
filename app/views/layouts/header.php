@@ -79,9 +79,13 @@
         <div style="flex-grow: 1;"></div>
 
         <?php if (isset($_SESSION['selected_project_name'])): ?>
-        <span class="nav-user-badge" style="background: #27ae60; color: white; display: inline-flex; align-items: center; gap: 6px;" title="Proyek Aktif">
-            📁 <?= htmlspecialchars($_SESSION['selected_project_name']) ?>
-            <a href="<?= BASE_URL ?>/public/index.php?page=dashboard&action=clearProject" style="color: white; text-decoration: none; font-weight: bold; padding: 0 4px; border-radius: 4px; background: rgba(0,0,0,0.15);" title="Nonaktifkan Filter">✕</a>
+        <span class="nav-project-badge" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ecf0f1; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Proyek Aktif">
+            <?= htmlspecialchars($_SESSION['selected_project_name']) ?>
+            <a href="<?= BASE_URL ?>/public/index.php?page=dashboard&action=clearProject" 
+               style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: 4px; color: #e74c3c; text-decoration: none; font-weight: bold; border-radius: 50%; background: rgba(231, 76, 60, 0.15); transition: all 0.2s ease; line-height: 1;" 
+               onmouseover="this.style.background='#e74c3c'; this.style.color='#fff';"
+               onmouseout="this.style.background='rgba(231, 76, 60, 0.15)'; this.style.color='#e74c3c';"
+               title="Tutup Proyek Aktif">✕</a>
         </span>
         <?php endif; ?>
 

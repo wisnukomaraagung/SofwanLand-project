@@ -86,10 +86,6 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                     <img id="image-preview" class="image-preview">
                 </div>
                 
-                <div id="ocr-status" style="font-size:12px; color:#b8860b; text-align:center; margin-bottom:16px; display:none;" aria-live="polite">
-                    Siap memindai kuitansi.
-                </div>
-
                 <div class="form-grid">
                     <div class="form-group form-full">
                         <label>Nama Barang</label>
@@ -160,6 +156,7 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                         <th>#</th>
                         <th>Tgl</th>
                         <th>Barang</th>
+                        <th>Foto</th>
                         <th>Qty</th>
                         <th>Harga Sat.</th>
                         <th>Total</th>
@@ -170,7 +167,7 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                 </thead>
                 <tbody>
                     <?php if (empty($masukList)): ?>
-                    <tr><td colspan="<?= $canManageBarang ? 9 : 8 ?>" class="text-center text-muted" style="padding:40px">Belum ada riwayat masuk</td></tr>
+                    <tr><td colspan="<?= $canManageBarang ? 10 : 9 ?>" class="text-center text-muted" style="padding:40px">Belum ada riwayat masuk</td></tr>
                     <?php else: ?>
                     <?php foreach ($masukList as $i => $m): ?>
                     <tr>
@@ -178,8 +175,14 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                         <td class="text-muted" style="font-size:13px"><?= date('d M Y', strtotime($m['tanggal'])) ?></td>
                         <td>
                             <strong><?= htmlspecialchars($m['nama_barang']) ?></strong>
+                        </td>
+                        <td class="text-center">
                             <?php if (!empty($m['foto_kuitansi'])): ?>
-                                <a href="<?= htmlspecialchars(BarangController::buktiViewUrl($m['foto_kuitansi'], 'masuk')) ?>" title="Lihat Kuitansi" style="text-decoration:none; margin-left:6px; font-size:14px;">🖼️</a>
+                                <a href="<?= htmlspecialchars(BarangController::buktiViewUrl($m['foto_kuitansi'], 'masuk')) ?>" title="Lihat Kuitansi" style="text-decoration:none; display:inline-block;">
+                                    <img src="<?= BASE_URL ?>/public/<?= htmlspecialchars($m['foto_kuitansi']) ?>" alt="Bukti" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                </a>
+                            <?php else: ?>
+                                <span class="text-muted">—</span>
                             <?php endif; ?>
                         </td>
                         <td><strong><?= number_format($m['jumlah']) ?></strong> <span class="text-muted"><?= $m['satuan'] ?></span></td>
@@ -216,6 +219,10 @@ $activeTab = $_GET['tab'] ?? 'masuk';
 <?php elseif ($activeTab === 'stok'): ?>
 <!-- STOK BARANG (Master Data) -->
 <div class="card">
+    <div class="card-header">
+        <span class="card-title">STOK BARANG (Master Data)</span>
+        <a href="?page=barang&action=exportStokExcel" class="btn btn-secondary btn-sm" style="text-decoration:none;">↓ Excel</a>
+    </div>
     <div class="table-wrap">
         <table>
             <thead>
@@ -343,6 +350,7 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                     <tr>
                         <th>Tanggal</th>
                         <th>Barang</th>
+                        <th>Foto</th>
                         <th>Proyek</th>
                         <th class="text-right">Jumlah</th>
                         <th>Keterangan</th>
@@ -351,12 +359,21 @@ $activeTab = $_GET['tab'] ?? 'masuk';
                 </thead>
                 <tbody>
                     <?php if (empty($keluarList)): ?>
-                    <tr><td colspan="<?= $canManageBarang ? 6 : 5 ?>" class="text-center text-muted" style="padding:24px">Belum ada data</td></tr>
+                    <tr><td colspan="<?= $canManageBarang ? 7 : 6 ?>" class="text-center text-muted" style="padding:24px">Belum ada data</td></tr>
                     <?php else: ?>
                     <?php foreach ($keluarList as $k): ?>
                     <tr>
                         <td class="text-muted" style="font-size:12px"><?= date('d M Y', strtotime($k['tanggal'])) ?></td>
                         <td><?= htmlspecialchars($k['nama_barang']) ?></td>
+                        <td class="text-center">
+                            <?php if (!empty($k['foto_bukti'])): ?>
+                                <a href="<?= htmlspecialchars(BarangController::buktiViewUrl($k['foto_bukti'], 'keluar')) ?>" title="Lihat Bukti" style="text-decoration:none; display:inline-block;">
+                                    <img src="<?= BASE_URL ?>/public/<?= htmlspecialchars($k['foto_bukti']) ?>" alt="Bukti" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                </a>
+                            <?php else: ?>
+                                <span class="text-muted">—</span>
+                            <?php endif; ?>
+                        </td>
                         <td class="text-muted" style="font-size:12px"><?= htmlspecialchars($k['nama_proyek']) ?></td>
                         <td class="text-right"><?= number_format($k['jumlah']) ?> <?= $k['satuan'] ?></td>
                         <td class="text-muted" style="font-size:12px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($k['keterangan'] ?? '') ?>">
@@ -381,17 +398,10 @@ $activeTab = $_GET['tab'] ?? 'masuk';
 <?php endif; ?>
 
 <?php if ($canManageBarang && in_array($activeTab, ['masuk', 'keluar'], true)): ?>
-<?php if ($activeTab === 'masuk'): ?>
-<script>window.BARANG_OCR_ASSETS = <?= json_encode(rtrim(BASE_URL, '/') . '/public/assets/tesseract') ?>;</script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-<?php endif; ?>
 <script src="<?= BASE_URL ?>/public/assets/js/barang-kuitansi.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    BarangKuitansi.init({
-        ocrEnabled: <?= $activeTab === 'masuk' ? 'true' : 'false' ?>,
-        assetBase: window.BARANG_OCR_ASSETS || ''
-    });
+    BarangKuitansi.init();
 });
 </script>
 <?php endif; ?>

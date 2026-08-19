@@ -172,7 +172,6 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
         <?php endif; ?>
         
         <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&id_proyek=<?= $proyek['id'] ?? '' ?>" class="btn btn-outline"><i class="ri-add-line"></i> Tambah Pengeluaran</a>
-        <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&action=exportLaporanExcel&id_proyek=<?= $proyek['id'] ?? '' ?>" class="btn btn-secondary" style="background:#475569; color:#fff; border:none;"><i class="ri-file-excel-2-line"></i> Export Excel Laporan</a>
     </div>
 
     <!-- Tabs -->

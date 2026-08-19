@@ -60,8 +60,15 @@ class BarangModel {
     }
 
     public function delete(int $id): bool {
-        $stmt = $this->db->prepare("DELETE FROM barang WHERE id = ?");
-        return $stmt->execute([$id]);
+        try {
+            $stmt = $this->db->prepare("DELETE FROM barang WHERE id = ?");
+            return $stmt->execute([$id]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == '23000') {
+                throw new Exception("Barang tidak dapat dihapus karena masih digunakan dalam riwayat transaksi (Masuk/Keluar).");
+            }
+            throw $e;
+        }
     }
 
     public function getMasuk(?int $idProyek = null): array {

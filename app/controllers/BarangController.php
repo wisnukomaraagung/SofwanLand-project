@@ -71,8 +71,12 @@ class BarangController {
 
     public function delete(int $id) {
         requireManagerPermission('barang');
-        $this->model->delete($id);
-        $_SESSION['flash'] = ['type'=>'success','message'=>'Barang berhasil dihapus.'];
+        try {
+            $this->model->delete($id);
+            $_SESSION['flash'] = ['type'=>'success','message'=>'Barang berhasil dihapus.'];
+        } catch (Exception $e) {
+            $_SESSION['flash'] = ['type'=>'error','message'=>$e->getMessage()];
+        }
         header('Location: ' . BASE_URL . '/public/index.php?page=barang'); exit;
     }
 
@@ -122,7 +126,7 @@ class BarangController {
         $data = [
             'id_barang'    => $id_barang,
             'jumlah'       => intval($_POST['jumlah'] ?? 0),
-            'tanggal'      => $_POST['tanggal'] ?? date('Y-m-d'),
+            'tanggal'      => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
             'harga_satuan' => floatval($_POST['harga_satuan'] ?? 0),
             'supplier'     => trim($_POST['supplier'] ?? ''),
             'no_kuitansi'  => trim($_POST['no_kuitansi'] ?? ''),
@@ -130,8 +134,11 @@ class BarangController {
             'keterangan'   => trim($_POST['keterangan'] ?? ''),
         ];
         
-        $this->model->storeMasuk($data);
-        $_SESSION['flash'] = ['type'=>'success','message'=>'Barang masuk berhasil dicatat.'];
+        if ($this->model->storeMasuk($data)) {
+            $_SESSION['flash'] = ['type'=>'success','message'=>'Barang masuk berhasil dicatat.'];
+        } else {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Gagal mencatat barang masuk. Periksa input data.'];
+        }
         header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=masuk'); exit;
     }
 
@@ -158,12 +165,15 @@ class BarangController {
             'id_barang'  => intval($_POST['id_barang'] ?? 0),
             'id_proyek'  => $idProyek,
             'jumlah'     => intval($_POST['jumlah'] ?? 0),
-            'tanggal'    => $_POST['tanggal'] ?? date('Y-m-d'),
+            'tanggal'    => !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d'),
             'keterangan' => trim($_POST['keterangan'] ?? ''),
             'foto_bukti' => $foto_bukti,
         ];
-        $this->model->storeKeluar($data);
-        $_SESSION['flash'] = ['type'=>'success','message'=>'Barang keluar berhasil dicatat.'];
+        if ($this->model->storeKeluar($data)) {
+            $_SESSION['flash'] = ['type'=>'success','message'=>'Barang keluar berhasil dicatat.'];
+        } else {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Gagal mencatat barang keluar. Periksa input data.'];
+        }
         header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=keluar'); exit;
     }
 
@@ -189,6 +199,7 @@ class BarangController {
         echo "<th>Supplier</th>";
         echo "<th>No Kuitansi</th>";
         echo "<th>Keterangan</th>";
+        echo "<th>Foto Kuitansi</th>";
         echo "</tr>";
         
         $no = 1;
@@ -206,6 +217,12 @@ class BarangController {
             echo "<td>" . htmlspecialchars($m['supplier'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($m['no_kuitansi'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($m['keterangan'] ?? '-') . "</td>";
+            if (!empty($m['foto_kuitansi'])) {
+                $url = rtrim(BASE_URL, '/') . '/public/' . $m['foto_kuitansi'];
+                echo "<td><a href='" . $url . "'>Lihat Foto</a></td>";
+            } else {
+                echo "<td>-</td>";
+            }
             echo "</tr>";
         }
         echo "</table>";
@@ -230,6 +247,7 @@ class BarangController {
         echo "<th>Jumlah</th>";
         echo "<th>Satuan</th>";
         echo "<th>Keterangan</th>";
+        echo "<th>Foto Bukti</th>";
         echo "</tr>";
         
         $no = 1;
@@ -242,6 +260,48 @@ class BarangController {
             echo "<td>" . $k['jumlah'] . "</td>";
             echo "<td>" . htmlspecialchars($k['satuan']) . "</td>";
             echo "<td>" . htmlspecialchars($k['keterangan'] ?? '-') . "</td>";
+            if (!empty($k['foto_bukti'])) {
+                $url = rtrim(BASE_URL, '/') . '/public/' . $k['foto_bukti'];
+                echo "<td><a href='" . $url . "'>Lihat Foto</a></td>";
+            } else {
+                echo "<td>-</td>";
+            }
+            echo "</tr>";
+        }
+        echo "</table>";
+        exit;
+    }
+
+    public function exportStokExcel() {
+        $idProyek = $_SESSION['selected_project_id'] ?? null;
+        $barangList = $this->model->getAll($idProyek);
+        
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Laporan_Master_Barang_" . date('Ymd') . ".xls\"");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+        
+        echo "<table border='1'>";
+        echo "<tr>";
+        echo "<th>No</th>";
+        echo "<th>Nama Barang</th>";
+        echo "<th>Satuan</th>";
+        echo "<th>Harga Satuan</th>";
+        echo "<th>Masuk</th>";
+        echo "<th>Keluar</th>";
+        echo "<th>Stok</th>";
+        echo "</tr>";
+        
+        $no = 1;
+        foreach ($barangList as $b) {
+            echo "<tr>";
+            echo "<td>" . $no++ . "</td>";
+            echo "<td>" . htmlspecialchars($b['nama_barang']) . "</td>";
+            echo "<td>" . htmlspecialchars($b['satuan']) . "</td>";
+            echo "<td>" . $b['harga_satuan'] . "</td>";
+            echo "<td>" . $b['total_masuk'] . "</td>";
+            echo "<td>" . $b['total_keluar'] . "</td>";
+            echo "<td>" . $b['stok'] . "</td>";
             echo "</tr>";
         }
         echo "</table>";

@@ -121,6 +121,28 @@ class KeuanganModel {
         ]);
     }
 
+    public function getById(int $id): ?array {
+        $stmt = $this->db->prepare("SELECT * FROM laporan_keuangan WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function update(int $id, array $data): bool {
+        $stmt = $this->db->prepare("
+            UPDATE laporan_keuangan
+            SET jumlah = ?, sumber = ?, keterangan = ?, tanggal = ?, kategori = ?
+            WHERE id = ?
+        ");
+        return $stmt->execute([
+            $data['jumlah'],
+            $data['sumber'] ?? null,
+            $data['keterangan'] ?? null,
+            $data['tanggal'],
+            $data['kategori'] ?? null,
+            $id
+        ]);
+    }
+
     public function delete(int $id): bool {
         return $this->db->prepare("DELETE FROM laporan_keuangan WHERE id = ?")->execute([$id]);
     }
