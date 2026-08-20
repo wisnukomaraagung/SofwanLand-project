@@ -169,10 +169,18 @@ class BarangController {
             'keterangan' => trim($_POST['keterangan'] ?? ''),
             'foto_bukti' => $foto_bukti,
         ];
-        if ($this->model->storeKeluar($data)) {
+
+        // Validasi jumlah > 0
+        if ($data['jumlah'] <= 0) {
+            $_SESSION['flash'] = ['type'=>'error','message'=>'Jumlah barang keluar harus lebih dari 0.'];
+            header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=keluar'); exit;
+        }
+
+        try {
+            $this->model->storeKeluar($data);
             $_SESSION['flash'] = ['type'=>'success','message'=>'Barang keluar berhasil dicatat.'];
-        } else {
-            $_SESSION['flash'] = ['type'=>'error','message'=>'Gagal mencatat barang keluar. Periksa input data.'];
+        } catch (Exception $e) {
+            $_SESSION['flash'] = ['type'=>'error','message'=>$e->getMessage()];
         }
         header('Location: ' . BASE_URL . '/public/index.php?page=barang&tab=keluar'); exit;
     }

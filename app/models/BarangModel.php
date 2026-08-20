@@ -257,14 +257,34 @@ class BarangModel {
 
         $pdo->beginTransaction();
         try {
+            // Cek stok tersedia dengan row lock
+            $stmtCek = $pdo->prepare("SELECT stok, nama_barang FROM barang WHERE id = ? FOR UPDATE");
+            $stmtCek->execute([$data['id_barang']]);
+            $barang = $stmtCek->fetch();
+
+            if (!$barang) {
+                $pdo->rollBack();
+                throw new Exception("Barang tidak ditemukan.");
+            }
+
+            if ($barang['stok'] <= 0) {
+                $pdo->rollBack();
+                throw new Exception("Stok {$barang['nama_barang']} sudah habis (0), tidak bisa dikeluarkan.");
+            }
+
+            if ($data['jumlah'] > $barang['stok']) {
+                $pdo->rollBack();
+                throw new Exception("Jumlah keluar ({$data['jumlah']}) melebihi stok tersedia ({$barang['stok']}) untuk {$barang['nama_barang']}.");
+            }
+
             $stmt = $pdo->prepare("INSERT INTO barang_keluar (id_barang, id_proyek, jumlah, tanggal, keterangan, foto_bukti) VALUES (?,?,?,?,?,?)");
             $stmt->execute([$data['id_barang'], $data['id_proyek'], $data['jumlah'], $data['tanggal'], $data['keterangan'], $data['foto_bukti'] ?? null]);
             $pdo->prepare("UPDATE barang SET stok = stok - ? WHERE id = ?")->execute([$data['jumlah'], $data['id_barang']]);
             $pdo->commit();
             return true;
         } catch (Exception $e) {
-            $pdo->rollBack();
-            return false;
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $e;
         }
     }
 
