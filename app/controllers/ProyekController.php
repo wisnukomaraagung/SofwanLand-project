@@ -16,7 +16,7 @@ class ProyekController {
         require BASE_PATH . '/app/views/proyek/index.php';
     }
 
-    public function detail(int $id) {
+   public function detail(int $id) {
         $proyek = $this->model->getDetail($id);
 
         if (!$proyek) {
@@ -24,51 +24,97 @@ class ProyekController {
             exit;
         }
 
+        // =========================
+        // DATA PROGRESS
+        // =========================
         $progressHistory = $this->model->getProgressHistory($id);
-        $keuanganHistory = $this->model->getKeuanganHistory($id);
-        $barangKeluar    = $this->model->getBarangKeluar($id);
-        $dokumentasiList = $this->model->getDokumentasi($id);
-        
-        $dokumentasiBaru = count($dokumentasiList);
 
+        // =========================
+        // DATA KEUANGAN
+        // =========================
+        $keuanganHistory = $this->model->getKeuanganHistory($id);
 
         $pengeluaranList = array_map(function($item) {
             return [
-                'tanggal' => $item['tanggal'],
-                'kategori' => ucfirst($item['tipe']),
-                'keterangan' => $item['keterangan'],
-                'nominal' => (int)$item['jumlah']
+                'tanggal'    => $item['tanggal'],
+                'kategori'   => $item['kategori'] ?? 'Lainnya',
+                'keterangan' => $item['keterangan'] ?? '-',
+                'nominal'    => (float)$item['jumlah']
             ];
         }, $keuanganHistory);
 
-        $rincianPekerjaan = [
-            [
-                'nama' => 'Pondasi',
-                'progress' => 100,
-                'status' => 'selesai',
-                'estimasi_hari' => 7,
-                'deskripsi' => 'Pekerjaan pondasi utama'
-            ],
-            [
-                'nama' => 'Struktur Beton',
-                'progress' => 65,
-                'status' => 'proses',
-                'estimasi_hari' => 14,
-                'deskripsi' => 'Pengerjaan struktur lantai'
-            ],
-            [
-                'nama' => 'Finishing',
-                'progress' => 10,
-                'status' => 'belum-mulai',
-                'estimasi_hari' => 10,
-                'deskripsi' => 'Tahap finishing akhir'
-            ]
-        ];
+        // =========================
+        // DATA PEKERJAAN / RAB
+        // =========================
+        if (!class_exists('PekerjaanModel')) {
+            require_once BASE_PATH . '/app/models/PekerjaanModel.php';
+        }
+
+        $pekerjaanModel = new PekerjaanModel();
+
+        $pekerjaanList = $pekerjaanModel->getByProyekId($id);
+        $summaryPekerjaan = $pekerjaanModel->getSummary($id);
+
+        /*
+        * Format data pekerjaan agar bisa dipakai
+        * oleh grafik dan bagian Analytics.
+        */
+        $rincianPekerjaan = array_map(function($item) {
+            return [
+                'nama'          => $item['nama_pekerjaan'],
+                'progress'      => (float)$item['progress_pekerjaan'],
+                'status'        => $item['status_pekerjaan'],
+                'bobot'         => (float)$item['bobot'],
+                'nilai'         => (float)$item['nilai_pekerjaan']
+            ];
+        }, $pekerjaanList);
+
+        $totalPekerjaan = $summaryPekerjaan['total_pekerjaan'];
+        $pekerjaanSelesai = $summaryPekerjaan['selesai'];
+
+        // =========================
+        // DOKUMENTASI
+        // =========================
+        $dokumentasiList = $this->model->getDokumentasi($id);
+        $totalDokumentasi = count($dokumentasiList);
+        $dokumentasiBaru = $totalDokumentasi;
+
+        // =========================
+        // KURVA S
+        // =========================
+        if (!class_exists('ProgressMingguanModel')) {
+            require_once BASE_PATH . '/app/models/ProgressMingguanModel.php';
+        }
+
+        $progressMingguanModel = new ProgressMingguanModel();
+
+        $kurvaData = $progressMingguanModel->getKurvaSData($id);
+        $progressList = $progressMingguanModel->getByProyekId($id);
+
+        // =========================
+        // TARGET PROGRESS
+        // =========================
+        $targetProgress = 0;
+
+        if (!empty($kurvaData)) {
+            $lastKurva = end($kurvaData);
+            $targetProgress = (float)$lastKurva['target_rencana'];
+        }
+
+        // =========================
+        // TREND PROGRESS
+        // =========================
+        $progressTrend = 0;
+
+        if (count($progressHistory) >= 2) {
+            $latest = (float)$progressHistory[count($progressHistory) - 1]['persentase'];
+            $previous = (float)$progressHistory[count($progressHistory) - 2]['persentase'];
+
+            $progressTrend = round($latest - $previous, 1);
+        }
 
         $pageTitle = htmlspecialchars($proyek['nama_proyek']);
         $pageSubtitle = 'Detail proyek';
-
-        
 
         require BASE_PATH . '/app/views/proyek/detail.php';
     }

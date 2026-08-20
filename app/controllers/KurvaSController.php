@@ -28,10 +28,17 @@ class KurvaSController {
         $progressList = $this->model->getByProyekId($id_proyek);
         
         // Hitung statistik
-        $totalTarget = array_sum(array_column($kurvaData, 'target_rencana'));
-        $totalRealisasi = array_sum(array_column($kurvaData, 'realisasi'));
-        $selisihAkhir = !empty($kurvaData) ? end($kurvaData)['selisih'] : 0;
-        
+        $totalTarget = 0;
+        $totalRealisasi = 0;
+        $selisihAkhir = 0;
+
+        if (!empty($kurvaData)) {
+            $lastKurva = end($kurvaData);
+
+            $totalTarget = (float)$lastKurva['target_rencana'];
+            $totalRealisasi = (float)$lastKurva['realisasi'];
+            $selisihAkhir = $totalRealisasi - $totalTarget;
+        }
         $pageTitle = 'Kurva S';
         $pageSubtitle = 'Grafik Progress Rencana vs Realisasi';
         $pageAction = roleCanManage('kurva_s') ? 

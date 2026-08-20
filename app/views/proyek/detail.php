@@ -87,11 +87,11 @@ $pengeluaranList = $pengeluaranList ?? [];
 $dokumentasiList = $dokumentasiList ?? [];
 $progressHistory = $progressHistory ?? [];
 
-$totalPekerjaan = $totalPekerjaan ?? count($rincianPekerjaan);
+$totalPekerjaan = $totalPekerjaan ?? 0;
 $pekerjaanSelesai = $pekerjaanSelesai ?? 0;
-$totalDokumentasi = $totalDokumentasi ?? count($dokumentasiList);
-$progressTrend = $progressTrend ?? 5;
-$targetProgress = $targetProgress ?? 75;
+$totalDokumentasi = $totalDokumentasi ?? 0;
+$progressTrend = $progressTrend ?? 0;
+$targetProgress = $targetProgress ?? 0;
 
 $nilaiKontrak = $proyek['nilai_kontrak'] ?? 0;
 $totalBiaya = $proyek['total_biaya'] ?? 0;
@@ -189,13 +189,6 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
     <!-- Tab RAB & Pekerjaan -->
     <div class="tab-content" id="rab">
         <?php
-        // Load PekerjaanModel
-        if (!class_exists('PekerjaanModel')) {
-            require_once BASE_PATH . '/app/models/PekerjaanModel.php';
-        }
-        $pekerjaanModel = new PekerjaanModel();
-        $pekerjaanList = $pekerjaanModel->getByProyekId($proyek['id']);
-        $summaryPekerjaan = $pekerjaanModel->getSummary($proyek['id']);
         ?>
         
         <!-- Summary Cards -->
@@ -302,9 +295,17 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
         $progressList = $progressMingguanModel->getByProyekId($proyek['id']);
         
         // Hitung statistik
-        $totalTarget = array_sum(array_column($kurvaData, 'target_rencana'));
-        $totalRealisasi = array_sum(array_column($kurvaData, 'realisasi'));
-        $selisihAkhir = !empty($kurvaData) ? end($kurvaData)['selisih'] : 0;
+        $totalTarget = 0;
+        $totalRealisasi = 0;
+        $selisihAkhir = 0;
+
+        if (!empty($kurvaData)) {
+            $lastKurva = end($kurvaData);
+
+            $totalTarget = (float)$lastKurva['target_rencana'];
+            $totalRealisasi = (float)$lastKurva['realisasi'];
+            $selisihAkhir = $totalRealisasi - $totalTarget;
+        }
         ?>
         
         <!-- Summary Cards -->
@@ -558,6 +559,7 @@ const progressHistory = <?= json_encode($progressHistory) ?>;
 const expenseData = <?= json_encode($pengeluaranList) ?>;
 const pekerjaanList = <?= json_encode($rincianPekerjaan) ?>;
 const dokumentasiList = <?= json_encode($dokumentasiList) ?>;
+const kurvaData = <?= json_encode($kurvaData) ?>;
 
 // Render functions
 function renderWorkList() {
@@ -593,7 +595,7 @@ function renderGallery() {
     if(dokumentasiList.length === 0) { container.innerHTML = '<div class="alert-box info">Belum ada dokumentasi</div>'; return; }
     const search = document.getElementById('search-doc')?.value.toLowerCase() || '';
     const filtered = dokumentasiList.filter(d => d.judul?.toLowerCase().includes(search));
-    container.innerHTML = filtered.map(d => `<div class="gallery-card"><img src="${d.gambar || 'https://via.placeholder.com/280x220'}" onerror="this.src='https://via.placeholder.com/280x220'"><div class="gallery-body"><h4>${d.judul}</h4><small>${new Date(d.tanggal).toLocaleDateString('id-ID')}</small><div class="job-progress"><span style="width:${d.progress || 0}%"></span></div></div></div>`).join('');
+    container.innerHTML = filtered.map(d => `<div class="gallery-card"><img src="${d.file_path || 'https://via.placeholder.com/280x220'}" onerror="this.src='https://via.placeholder.com/280x220'"><div class="gallery-body"><h4>${d.judul}</h4><small>${new Date(d.tanggal).toLocaleDateString('id-ID')}</small><div class="job-progress"><span style="width:${d.progress || 0}%"></span></div></div></div>`).join('');
 }
 
 function renderRecentActivities() {
@@ -631,19 +633,70 @@ if(document.getElementById('progressChart')) {
         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
     });
 }
-if(document.getElementById('predictionChart') && progressHistory.length) {
-    const last = progressHistory[progressHistory.length-1]?.persentase || 0;
+if(document.getElementById('predictionChart') && progressHistory.length >= 2) {
+
+    const first = parseFloat(progressHistory[0].persentase) || 0;
+    const last = parseFloat(progressHistory[progressHistory.length - 1].persentase) || 0;
+
+    const kenaikanPerData = (last - first) / (progressHistory.length - 1);
+
+    const predictionData = Array.from(
+        { length: 4 },
+        (_, i) => Math.min(100, last + kenaikanPerData * (i + 1))
+    );
+
     new Chart(document.getElementById('predictionChart').getContext('2d'), {
         type: 'line',
-        data: { labels: Array.from({length:30},(_,i)=>`H+${i+1}`), datasets: [{ label:'Prediksi', data: Array.from({length:30},(_,i)=>Math.min(100,last+(i+1)*1.2)), borderColor:'#f59e0b', borderDash:[5,5] }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+        data: {
+            labels: ['Sekarang', 'Periode +1', 'Periode +2', 'Periode +3', 'Periode +4'],
+            datasets: [{
+                label: 'Prediksi Progress',
+                data: [last, ...predictionData],
+                borderDash: [5, 5],
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
     });
 }
-if(document.getElementById('comparisonChart') && progressHistory.length) {
+
+if(document.getElementById('comparisonChart') && kurvaData.length) {
     new Chart(document.getElementById('comparisonChart').getContext('2d'), {
         type: 'line',
-        data: { labels: progressHistory.map(p=>new Date(p.tanggal).toLocaleDateString('id-ID',{day:'numeric',month:'short'})), datasets: [{ label:'Actual', data: progressHistory.map(p=>p.persentase), borderColor:'#2563eb' }, { label:'Target', data: progressHistory.map((_,i)=>Math.min(100,(i+1)*(100/progressHistory.length))), borderColor:'#dc2626', borderDash:[5,5] }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+        data: {
+            labels: kurvaData.map(p => 'Minggu ' + p.minggu_ke),
+            datasets: [
+                {
+                    label: 'Rencana',
+                    data: kurvaData.map(p => parseFloat(p.target_rencana)),
+                    tension: 0.3
+                },
+                {
+                    label: 'Realisasi',
+                    data: kurvaData.map(p => parseFloat(p.realisasi)),
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
     });
 }
 if(expenseData.length && document.getElementById('expenseChart')) {
@@ -660,7 +713,20 @@ if(pekerjaanList.length && document.getElementById('efficiencyChart')) {
     new Chart(document.getElementById('efficiencyChart').getContext('2d'), { type:'radar', data:{ labels:pekerjaanList.map(p=>p.nama), datasets:[{ label:'Progress', data:pekerjaanList.map(p=>p.progress||0), backgroundColor:'rgba(37,99,235,0.2)', borderColor:'#2563eb' }] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ r:{ beginAtZero:true, max:100 } } } });
 }
 if(pekerjaanList.length && document.getElementById('timeDistributionChart')) {
-    new Chart(document.getElementById('timeDistributionChart').getContext('2d'), { type:'pie', data:{ labels:pekerjaanList.map(p=>p.nama), datasets:[{ data:pekerjaanList.map(p=>p.estimasi_hari||5), backgroundColor:['#2563eb','#16a34a','#f59e0b','#dc2626'] }] }, options:{ responsive:true, maintainAspectRatio:false } });
+    new Chart(document.getElementById('timeDistributionChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: pekerjaanList.map(p => p.nama),
+            datasets: [{
+                label: 'Bobot Pekerjaan',
+                data: pekerjaanList.map(p => p.bobot || 0)
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
 }
 
 

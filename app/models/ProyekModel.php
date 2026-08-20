@@ -50,33 +50,78 @@ class ProyekModel {
         $stmt = $this->db->prepare("
             SELECT
                 p.*,
+
                 COALESCE(pr.persentase, 0) AS progress_terbaru,
                 COALESCE(pr.keterangan, '') AS progress_ket,
                 COALESCE(pr.tanggal, '') AS progress_tgl,
-                COUNT(DISTINCT a.id_karyawan) AS total_pekerja,
-                COALESCE(SUM(bk.jumlah), 0) AS total_barang_keluar,
+
+                COALESCE(absensi_sum.total_pekerja, 0) AS total_pekerja,
+                COALESCE(barang_sum.total_barang_keluar, 0) AS total_barang_keluar,
+
                 COALESCE(lk_sum.total_biaya, 0) AS total_biaya,
                 COALESCE(lk_sum.total_pemasukan, 0) AS total_pemasukan
+
             FROM proyek p
+
             LEFT JOIN (
-                SELECT id_proyek, persentase, keterangan, tanggal FROM progress
+                SELECT
+                    id_proyek,
+                    persentase,
+                    keterangan,
+                    tanggal
+                FROM progress
                 WHERE (id_proyek, tanggal) IN (
-                    SELECT id_proyek, MAX(tanggal) FROM progress GROUP BY id_proyek
+                    SELECT id_proyek, MAX(tanggal)
+                    FROM progress
+                    GROUP BY id_proyek
                 )
             ) pr ON pr.id_proyek = p.id
-            LEFT JOIN absensi a ON a.id_proyek = p.id
-            LEFT JOIN barang_keluar bk ON bk.id_proyek = p.id
+
             LEFT JOIN (
-                SELECT id_proyek,
-                    SUM(CASE WHEN tipe = 'pengeluaran' THEN jumlah ELSE 0 END) AS total_biaya,
-                    SUM(CASE WHEN tipe = 'pemasukan' THEN jumlah ELSE 0 END) AS total_pemasukan
-                FROM laporan_keuangan GROUP BY id_proyek
+                SELECT
+                    id_proyek,
+                    COUNT(DISTINCT id_karyawan) AS total_pekerja
+                FROM absensi
+                GROUP BY id_proyek
+            ) absensi_sum ON absensi_sum.id_proyek = p.id
+
+            LEFT JOIN (
+                SELECT
+                    id_proyek,
+                    SUM(jumlah) AS total_barang_keluar
+                FROM barang_keluar
+                GROUP BY id_proyek
+            ) barang_sum ON barang_sum.id_proyek = p.id
+
+            LEFT JOIN (
+                SELECT
+                    id_proyek,
+
+                    SUM(
+                        CASE
+                            WHEN tipe = 'pengeluaran'
+                            THEN jumlah
+                            ELSE 0
+                        END
+                    ) AS total_biaya,
+
+                    SUM(
+                        CASE
+                            WHEN tipe = 'pemasukan'
+                            THEN jumlah
+                            ELSE 0
+                        END
+                    ) AS total_pemasukan
+
+                FROM laporan_keuangan
+                GROUP BY id_proyek
             ) lk_sum ON lk_sum.id_proyek = p.id
+
             WHERE p.id = ?
-            GROUP BY p.id, pr.persentase, pr.keterangan, pr.tanggal,
-                     lk_sum.total_biaya, lk_sum.total_pemasukan
         ");
+
         $stmt->execute([$id]);
+
         return $stmt->fetch() ?: null;
     }
 
@@ -96,17 +141,28 @@ class ProyekModel {
     
     public function getProgressHistory(int $id): array {
         $stmt = $this->db->prepare(
-            "SELECT * FROM progress WHERE id_proyek = ? ORDER BY tanggal DESC LIMIT 10"
+            "SELECT * 
+            FROM progress 
+            WHERE id_proyek = ? 
+            ORDER BY tanggal ASC"
         );
+
         $stmt->execute([$id]);
+
         return $stmt->fetchAll();
     }
 
     public function getKeuanganHistory(int $id): array {
         $stmt = $this->db->prepare(
-            "SELECT * FROM laporan_keuangan WHERE id_proyek = ? ORDER BY tanggal DESC LIMIT 10"
+            "SELECT *
+            FROM laporan_keuangan
+            WHERE id_proyek = ?
+            AND tipe = 'pengeluaran'
+            ORDER BY tanggal ASC"
         );
+
         $stmt->execute([$id]);
+
         return $stmt->fetchAll();
     }
 
