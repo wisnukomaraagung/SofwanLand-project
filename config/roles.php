@@ -30,7 +30,7 @@ function getRolePermissions(): array
                 'absensi'   => ['icon' => '◩', 'label' => 'Absensi'],
                 'barang'    => ['icon' => '◧', 'label' => 'Barang'],
             ],
-            'manage' => ['proyek', 'keuangan', 'absensi', 'barang', 'pekerjaan', 'kurva_s'],
+            'manage' => ['proyek', 'keuangan', 'absensi', 'pekerjaan', 'kurva_s'],
             'dashboard_subtitle' => 'Pantau proyek dan laporan keuangan',
         ],
         'user' => [
