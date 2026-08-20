@@ -13,8 +13,8 @@ class AbsensiController {
         $karyawanList = $this->model->getKaryawan();
         $proyekList   = $this->model->getProyek();
         $rekapList    = $this->model->getRekapPerProyek();
-        $pageTitle    = 'Absensi';
-        $pageSubtitle = 'Catatan kehadiran karyawan per proyek';
+        $pageTitle    = '';
+        $pageSubtitle = '';
         require BASE_PATH . '/app/views/absensi/index.php';
     }
 
