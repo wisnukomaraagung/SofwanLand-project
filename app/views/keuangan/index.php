@@ -12,18 +12,13 @@ $globalProjectId = $_SESSION['selected_project_id'] ?? null;
 <?php else:
 $canManage = roleCanManage('keuangan');
 $activeTab = $_GET['tab'] ?? 'masuk';
-if (!$canManage) {
-    $activeTab = 'laporan';
-}
 if (!in_array($activeTab, ['masuk', 'keluar', 'laporan'], true)) $activeTab = 'masuk';
 ?>
 
 <!-- PILL NAV -->
 <div class="pill-nav">
-    <?php if ($canManage): ?>
     <a href="?page=keuangan&tab=masuk"   class="pill-btn <?= $activeTab === 'masuk'   ? 'active' : '' ?>">↑ Keuangan Masuk</a>
     <a href="?page=keuangan&tab=keluar"  class="pill-btn <?= $activeTab === 'keluar'  ? 'active' : '' ?>">↓ Keuangan Keluar</a>
-    <?php endif; ?>
     <a href="?page=keuangan&tab=laporan" class="pill-btn <?= $activeTab === 'laporan' ? 'active' : '' ?>">≡ Laporan Keuangan</a>
 </div>
 
@@ -109,12 +104,9 @@ if (!in_array($activeTab, ['masuk', 'keluar', 'laporan'], true)) $activeTab = 'm
                         <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
                         <?php if ($canManage): ?>
                         <td style="padding: 12px 20px;">
-                            <div style="display:flex; gap:6px;">
-                                <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&action=editMasuk&id=<?= (int)$lk['id'] ?>"
-                                   class="btn btn-sm" style="background: #ffffff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 4px;">Edit</a>
-                                <a href="javascript:void(0)"
-                                   onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=deleteMasuk&id=<?= (int)$lk['id'] ?>','pemasukan ini')"
-                                   class="btn btn-sm" style="background: #ffffff; color: #ef4444; border: 1px solid #fecaca; padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 4px;">Hapus</a>
+                            <div class="flex">
+                                <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&action=editMasuk&id=<?= (int)$lk['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
+                                <a href="javascript:void(0)" onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=deleteMasuk&id=<?= (int)$lk['id'] ?>','pemasukan ini')" class="btn btn-danger btn-sm">Hapus</a>
                             </div>
                         </td>
                         <?php endif; ?>
@@ -254,12 +246,9 @@ if (!in_array($activeTab, ['masuk', 'keluar', 'laporan'], true)) $activeTab = 'm
                             <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
                             <?php if ($canManage): ?>
                             <td style="padding: 12px 20px;">
-                                <div style="display:flex; gap:6px;">
-                                    <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&action=editKeluar&id=<?= (int)$lk['id'] ?>"
-                                       class="btn btn-sm" style="background: #ffffff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 4px;">Edit</a>
-                                    <a href="javascript:void(0)"
-                                       onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=deleteKeluar&id=<?= (int)$lk['id'] ?>','pengeluaran ini')"
-                                       class="btn btn-sm" style="background: #ffffff; color: #ef4444; border: 1px solid #fecaca; padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 4px;">Hapus</a>
+                                <div class="flex">
+                                    <a href="<?= BASE_URL ?>/public/index.php?page=keuangan&action=editKeluar&id=<?= (int)$lk['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
+                                    <a href="javascript:void(0)" onclick="confirmDelete('<?= BASE_URL ?>/public/index.php?page=keuangan&action=deleteKeluar&id=<?= (int)$lk['id'] ?>','pengeluaran ini')" class="btn btn-danger btn-sm">Hapus</a>
                                 </div>
                             </td>
                             <?php endif; ?>
@@ -282,27 +271,95 @@ if (!in_array($activeTab, ['masuk', 'keluar', 'laporan'], true)) $activeTab = 'm
     <a href="?page=keuangan&action=exportLaporanExcel" class="btn btn-secondary btn-sm" style="text-decoration:none;">↓ Export Excel Laporan</a>
 </div>
 
-
 <?php
 $categories = ['Gaji', 'Pembelian Material', 'Sewa Alat', 'Lainnya'];
 $groupedKeluar = [];
-foreach ($categories as $c) {
-    $groupedKeluar[$c] = [];
-}
+foreach ($categories as $c) $groupedKeluar[$c] = [];
 foreach ($keluarList as $lk) {
     $cat = $lk['kategori'] ?: 'Lainnya';
-    if (!in_array($cat, $categories)) {
-        $groupedKeluar['Lainnya'][] = $lk;
-    } else {
-        $groupedKeluar[$cat][] = $lk;
-    }
+    $groupedKeluar[in_array($cat, $categories) ? $cat : 'Lainnya'][] = $lk;
 }
+$totalPemasukan   = $summary['total_pemasukan'] ?? 0;
+$totalPengeluaran = $summary['total_pengeluaran'] ?? 0;
+$saldo            = $totalPemasukan - $totalPengeluaran;
 ?>
 
+<!-- RINGKASAN SALDO -->
+<div class="stats-grid" style="grid-template-columns: repeat(3,1fr); margin-bottom: 20px;">
+    <div class="stat-card" style="background: linear-gradient(135deg,#e8f5e9,#c8e6c9);">
+        <div class="stat-label">Total Pemasukan</div>
+        <div class="stat-value small" style="color:#2e7d32; font-size:20px;">Rp <?= number_format($totalPemasukan/1000000,1) ?>M</div>
+        <div class="stat-trend">Rp <?= number_format($totalPemasukan,0,',','.') ?></div>
+        <div class="stat-icon" style="color:#2e7d32;">↑</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg,#fce4ec,#f8bbd9);">
+        <div class="stat-label">Total Pengeluaran</div>
+        <div class="stat-value small" style="color:#c62828; font-size:20px;">Rp <?= number_format($totalPengeluaran/1000000,1) ?>M</div>
+        <div class="stat-trend">Rp <?= number_format($totalPengeluaran,0,',','.') ?></div>
+        <div class="stat-icon" style="color:#c62828;">↓</div>
+    </div>
+    <div class="stat-card" style="background: <?= $saldo >= 0 ? 'linear-gradient(135deg,#e3f2fd,#bbdefb)' : 'linear-gradient(135deg,#fff3e0,#ffe0b2)' ?>;">
+        <div class="stat-label">Saldo / Laba Bruto</div>
+        <div class="stat-value small" style="color:<?= $saldo >= 0 ? '#1565c0' : '#e65100' ?>; font-size:20px;">Rp <?= number_format(abs($saldo)/1000000,1) ?>M</div>
+        <div class="stat-trend" style="color:<?= $saldo >= 0 ? '#1565c0' : '#e65100' ?>"><?= $saldo >= 0 ? '+ Surplus' : '- Defisit' ?></div>
+        <div class="stat-icon" style="color:<?= $saldo >= 0 ? '#1565c0' : '#e65100' ?>;"><?= $saldo >= 0 ? '◎' : '⚠' ?></div>
+    </div>
+</div>
+
+<!-- ── BAGIAN PEMASUKAN ── -->
+<div class="card mb-3" style="margin-bottom: 24px; border: 1px solid #c8e6c9; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;">
+    <div class="card-header" style="background: #e8f5e9; border-bottom: 1px solid #c8e6c9; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
+        <span style="font-weight: 700; color: #2e7d32; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#2e7d32;"></span>
+            ↑ RIWAYAT PEMASUKAN
+        </span>
+        <span style="background:#ffffff; color:#2e7d32; font-size:12px; font-weight:600; padding:4px 14px; border-radius:20px; border:1px solid #a5d6a7;">
+            Total: Rp <?= number_format($totalPemasukan, 0, ',', '.') ?>
+        </span>
+    </div>
+    <div class="table-wrap" style="padding: 0; margin: 0;">
+        <table style="margin: 0; border: none;">
+            <thead style="background: #f1f8f1;">
+                <tr>
+                    <th style="width:50px; border-top:none; color:#388e3c; font-weight:600; font-size:11px; text-transform:uppercase; padding:12px 20px;">#</th>
+                    <th style="width:120px; border-top:none; color:#388e3c; font-weight:600; font-size:11px; text-transform:uppercase; padding:12px 20px;">Tanggal</th>
+                    <th class="text-right" style="width:160px; border-top:none; color:#388e3c; font-weight:600; font-size:11px; text-transform:uppercase; padding:12px 20px;">Jumlah</th>
+                    <th style="border-top:none; color:#388e3c; font-weight:600; font-size:11px; text-transform:uppercase; padding:12px 20px;">Dari / Sumber</th>
+                    <th style="border-top:none; color:#388e3c; font-weight:600; font-size:11px; text-transform:uppercase; padding:12px 20px;">Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($masukList)): ?>
+                <tr><td colspan="5" class="text-center text-muted" style="padding:30px; font-size:13px; background:#fff;">Belum ada riwayat pemasukan</td></tr>
+                <?php else: ?>
+                <?php foreach ($masukList as $k => $lk): ?>
+                <tr style="border-bottom:1px solid #f1f5f9; background:#fff;">
+                    <td class="text-muted" style="font-size:13px; padding:12px 20px;"><?= $k + 1 ?></td>
+                    <td class="text-muted" style="font-size:13px; padding:12px 20px;"><?= date('d/m/Y', strtotime($lk['tanggal'])) ?></td>
+                    <td class="text-right fw-700" style="color:#27ae60; font-size:13px; padding:12px 20px;">+ Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
+                    <td style="font-size:13px; color:#475569; padding:12px 20px;"><?= htmlspecialchars($lk['sumber'] ?? '—') ?></td>
+                    <td class="text-muted" style="font-size:13px; padding:12px 20px;"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
+                </tr>
+                <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ── BAGIAN PENGELUARAN PER KATEGORI ── -->
+<div style="font-weight:700; color:#c62828; font-size:15px; margin:24px 0 12px; display:flex; align-items:center; gap:8px;">
+    <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#c62828;"></span>
+    ↓ RIWAYAT PENGELUARAN PER KATEGORI
+    <span style="margin-left:auto; font-size:13px; font-weight:600; color:#475569;">
+        Total: Rp <?= number_format($totalPengeluaran, 0, ',', '.') ?>
+    </span>
+</div>
+
 <?php foreach ($groupedKeluar as $categoryName => $items): ?>
-<div class="card mb-3" style="margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;">
-    <div class="card-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
-        <span style="font-weight: 600; color: #334155; font-size: 14px; display: flex; align-items: center; gap: 10px; letter-spacing: 0.2px;">
+<div class="card mb-3" style="margin-top: 0; border: 1px solid #ffcdd2; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;">
+    <div class="card-header" style="background: #fff5f5; border-bottom: 1px solid #ffcdd2; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
+        <span style="font-weight: 600; color: #b71c1c; font-size: 14px; display: flex; align-items: center; gap: 10px; letter-spacing: 0.2px;">
             <?php
             $dotColor = '#94a3b8';
             if ($categoryName === 'Gaji') $dotColor = '#3b82f6';
@@ -312,19 +369,19 @@ foreach ($keluarList as $lk) {
             <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: <?= $dotColor ?>;"></span>
             <?= strtoupper($categoryName) ?>
         </span>
-        <span style="background: #ffffff; color: #475569; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid #e2e8f0;">
+        <span style="background: #ffffff; color: #b71c1c; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid #ffcdd2;">
             Total: Rp <?= number_format(array_sum(array_column($items, 'jumlah')), 0, ',', '.') ?>
         </span>
     </div>
     <div class="table-wrap" style="padding: 0; margin: 0;">
         <table style="margin: 0; border: none;">
-            <thead style="background: #ffffff;">
+            <thead style="background: #fff5f5;">
                 <tr>
-                    <th style="width: 50px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">No</th>
-                    <th style="width: 120px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Tanggal</th>
-                    <th class="text-right" style="width: 150px; border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Jumlah</th>
-                    <th style="border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Kepada / Tujuan</th>
-                    <th style="border-top: none; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Keterangan</th>
+                    <th style="width: 50px; border-top: none; color: #c62828; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">No</th>
+                    <th style="width: 120px; border-top: none; color: #c62828; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Tanggal</th>
+                    <th class="text-right" style="width: 150px; border-top: none; color: #c62828; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Jumlah</th>
+                    <th style="border-top: none; color: #c62828; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Kepada / Tujuan</th>
+                    <th style="border-top: none; color: #c62828; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 12px 20px;">Keterangan</th>
                 </tr>
             </thead>
             <tbody>
@@ -335,17 +392,32 @@ foreach ($keluarList as $lk) {
                 <tr style="border-bottom: 1px solid #f1f5f9; background: #ffffff;">
                     <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= $k + 1 ?></td>
                     <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= date('d/m/Y', strtotime($lk['tanggal'])) ?></td>
-                    <td class="text-right" style="color: #334155; font-weight: 500; font-size: 13px; padding: 12px 20px;">Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
+                    <td class="text-right" style="color:#c62828; font-weight:500; font-size: 13px; padding: 12px 20px;">- Rp <?= number_format($lk['jumlah'], 0, ',', '.') ?></td>
                     <td style="font-size: 13px; color: #475569; padding: 12px 20px;"><?= htmlspecialchars($lk['sumber'] ?? '—') ?></td>
                     <td class="text-muted" style="font-size: 13px; padding: 12px 20px;"><?= htmlspecialchars($lk['keterangan'] ?? '—') ?></td>
                 </tr>
                 <?php endforeach; ?>
                 <?php endif; ?>
             </tbody>
+            <?php if (!empty($items)): ?>
+            <tfoot>
+                <tr style="background: #fff0f0; border-top: 2px solid #ffcdd2;">
+                    <td colspan="2" style="font-size: 13px; font-weight: 700; color: #b71c1c; padding: 10px 20px; text-align: right;">Subtotal <?= strtoupper($categoryName) ?></td>
+                    <td class="text-right" style="font-size: 13px; font-weight: 700; color: #b71c1c; padding: 10px 20px;">- Rp <?= number_format(array_sum(array_column($items, 'jumlah')), 0, ',', '.') ?></td>
+                    <td colspan="2" style="padding: 10px 20px;"></td>
+                </tr>
+            </tfoot>
+            <?php endif; ?>
         </table>
     </div>
 </div>
 <?php endforeach; ?>
+
+<!-- GRAND TOTAL PENGELUARAN -->
+<div style="background: linear-gradient(135deg, #b71c1c, #c62828); border-radius: 8px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+    <span style="color: #ffffff; font-weight: 700; font-size: 15px;">TOTAL SELURUH PENGELUARAN</span>
+    <span style="color: #ffffff; font-weight: 700; font-size: 18px;">- Rp <?= number_format($totalPengeluaran, 0, ',', '.') ?></span>
+</div>
 <?php endif; ?>
 <?php endif; ?>
 

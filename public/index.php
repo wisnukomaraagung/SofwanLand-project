@@ -4,7 +4,10 @@
 session_start();
 
 define('BASE_PATH', dirname(__DIR__));
-define('BASE_URL', (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . str_replace('/public/index.php', '', $_SERVER['SCRIPT_NAME']));
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+$baseFolder = preg_replace('#/public$#', '', rtrim($scriptDir, '/'));
+$scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? 'https' : 'http';
+define('BASE_URL', $scheme . '://' . $_SERVER['HTTP_HOST'] . $baseFolder);
 
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/config/roles.php';
@@ -60,14 +63,14 @@ $routes = [
     'absensi'   => 'AbsensiController',
     'keuangan'  => 'KeuanganController',
     'pekerjaan' => 'PekerjaanController',
-     'kurva_s'   => 'KurvaSController', 
+    'kurva_s'   => 'KurvaSController', 
 ];
 
 // Access control middleware
 $publicPages = ['login']; // Pages yang bisa diakses tanpa login
 $publicActions = ['authenticate', 'logout']; // Actions yang bisa diakses tanpa login
 if (!in_array($page, $publicPages) && !in_array($action, $publicActions) && !isset($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/?page=login');
+    header('Location: ' . BASE_URL . '/public/index.php?page=login');
     exit;
 }
 
@@ -95,6 +98,7 @@ if (isset($routes[$page])) {
     elseif ($action === 'delete')       $controller->delete((int)$id);
     elseif ($action === 'exportMasukExcel') $controller->exportMasukExcel();
     elseif ($action === 'exportKeluarExcel') $controller->exportKeluarExcel();
+    elseif ($action === 'exportStokExcel') $controller->exportStokExcel();
     elseif ($action === 'exportLaporanExcel') $controller->exportLaporanExcel();
     elseif ($action === 'exportExcel')  $controller->exportExcel();
     elseif ($action === 'editMasuk')    $controller->editMasuk((int)$id);

@@ -181,50 +181,75 @@ class BarangController {
     public function exportMasukExcel() {
         $idProyek = $_SESSION['selected_project_id'] ?? null;
         $masukList = $this->model->getMasuk($idProyek);
-        
+        $proyekNama = $_SESSION['selected_project_name'] ?? 'Semua Proyek';
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Barang_Masuk_" . date('Ymd') . ".xls\"");
         header("Pragma: no-cache");
         header("Expires: 0");
-        
-        echo "<table border='1'>";
+
+        // Warna biru untuk Barang Masuk
+        $headerBg  = '#1565C0'; // biru tua (judul)
+        $headerBg2 = '#1976D2'; // biru medium (kolom)
+        $stripeBg  = '#E3F2FD'; // biru muda (baris ganjil)
+
+        echo "<table border='1' style='border-collapse:collapse; font-family:Arial; font-size:14px;'>";
+
+        // Baris judul utama
         echo "<tr>";
-        echo "<th>No</th>";
-        echo "<th>Tanggal</th>";
-        echo "<th>Barang</th>";
-        echo "<th>Jumlah</th>";
-        echo "<th>Satuan</th>";
-        echo "<th>Harga Satuan</th>";
-        echo "<th>Total</th>";
-        echo "<th>Supplier</th>";
-        echo "<th>No Kuitansi</th>";
-        echo "<th>Keterangan</th>";
-        echo "<th>Foto Kuitansi</th>";
+        echo "<td colspan='11' style='background:{$headerBg}; color:#FFFFFF; font-size:20px; font-weight:bold; text-align:center; padding:12px; border:none;'>LAPORAN BARANG MASUK</td>";
         echo "</tr>";
-        
+
+        // Baris info proyek & tanggal
+        echo "<tr>";
+        echo "<td colspan='6' style='background:#E3F2FD; color:#0D47A1; font-size:14px; padding:6px 10px; border:1px solid #BBDEFB;'>Proyek: <b>" . htmlspecialchars($proyekNama) . "</b></td>";
+        echo "<td colspan='5' style='background:#E3F2FD; color:#0D47A1; font-size:14px; padding:6px 10px; text-align:right; border:1px solid #BBDEFB;'>Tanggal Cetak: <b>" . date('d/m/Y H:i') . "</b></td>";
+        echo "</tr>";
+
+        // Baris kosong pemisah
+        echo "<tr><td colspan='11' style='border:none; padding:4px;'></td></tr>";
+
+        // Header kolom
+        $cols = ['No', 'Tanggal', 'Nama Barang', 'Jumlah', 'Satuan', 'Harga Satuan (Rp)', 'Total (Rp)', 'Supplier', 'No Kuitansi', 'Keterangan', 'Foto Kuitansi'];
+        echo "<tr>";
+        foreach ($cols as $col) {
+            echo "<th style='background:{$headerBg2}; color:#FFFFFF; padding:7px 10px; text-align:center; border:1px solid #0D47A1; font-weight:bold;'>" . $col . "</th>";
+        }
+        echo "</tr>";
+
         $no = 1;
         foreach ($masukList as $m) {
             $harga = $m['harga_satuan'] ?? 0;
             $total = $harga * $m['jumlah'];
-            echo "<tr>";
-            echo "<td>" . $no++ . "</td>";
-            echo "<td>" . $m['tanggal'] . "</td>";
-            echo "<td>" . htmlspecialchars($m['nama_barang']) . "</td>";
-            echo "<td>" . $m['jumlah'] . "</td>";
-            echo "<td>" . htmlspecialchars($m['satuan']) . "</td>";
-            echo "<td>" . $harga . "</td>";
-            echo "<td>" . $total . "</td>";
-            echo "<td>" . htmlspecialchars($m['supplier'] ?? '-') . "</td>";
-            echo "<td>" . htmlspecialchars($m['no_kuitansi'] ?? '-') . "</td>";
-            echo "<td>" . htmlspecialchars($m['keterangan'] ?? '-') . "</td>";
+            $rowBg = ($no % 2 === 0) ? '#FFFFFF' : $stripeBg;
+            echo "<tr style='background:{$rowBg};'>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #BBDEFB;'>" . $no++ . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #BBDEFB;'>" . date('d/m/Y', strtotime($m['tanggal'])) . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #BBDEFB;'>" . htmlspecialchars($m['nama_barang']) . "</td>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #BBDEFB;'>" . number_format($m['jumlah'], 0, ',', '.') . "</td>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #BBDEFB;'>" . htmlspecialchars($m['satuan']) . "</td>";
+            echo "<td style='text-align:right; padding:5px 8px; border:1px solid #BBDEFB;'>" . number_format($harga, 0, ',', '.') . "</td>";
+            echo "<td style='text-align:right; padding:5px 8px; border:1px solid #BBDEFB; font-weight:bold;'>" . number_format($total, 0, ',', '.') . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #BBDEFB;'>" . htmlspecialchars($m['supplier'] ?? '-') . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #BBDEFB;'>" . htmlspecialchars($m['no_kuitansi'] ?? '-') . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #BBDEFB;'>" . htmlspecialchars($m['keterangan'] ?? '-') . "</td>";
             if (!empty($m['foto_kuitansi'])) {
                 $url = rtrim(BASE_URL, '/') . '/public/' . $m['foto_kuitansi'];
-                echo "<td><a href='" . $url . "'>Lihat Foto</a></td>";
+                echo "<td style='text-align:center; padding:5px 8px; border:1px solid #BBDEFB;'><a href='" . $url . "' style='color:#1565C0;'>Lihat Foto</a></td>";
             } else {
-                echo "<td>-</td>";
+                echo "<td style='text-align:center; padding:5px 8px; border:1px solid #BBDEFB; color:#999;'>-</td>";
             }
             echo "</tr>";
         }
+
+        // Baris total
+        $grandTotal = array_sum(array_map(fn($m) => ($m['harga_satuan'] ?? 0) * $m['jumlah'], $masukList));
+        echo "<tr>";
+        echo "<td colspan='6' style='background:{$headerBg2}; color:#FFFFFF; font-weight:bold; text-align:right; padding:6px 10px; border:1px solid #0D47A1;'>TOTAL KESELURUHAN</td>";
+        echo "<td style='background:{$headerBg2}; color:#FFFFFF; font-weight:bold; text-align:right; padding:6px 10px; border:1px solid #0D47A1;'>" . number_format($grandTotal, 0, ',', '.') . "</td>";
+        echo "<td colspan='4' style='background:{$headerBg2}; border:1px solid #0D47A1;'></td>";
+        echo "</tr>";
+
         echo "</table>";
         exit;
     }
@@ -232,42 +257,70 @@ class BarangController {
     public function exportKeluarExcel() {
         $idProyek = $_SESSION['selected_project_id'] ?? null;
         $keluarList = $this->model->getKeluar($idProyek);
-        
+        $proyekNama = $_SESSION['selected_project_name'] ?? 'Semua Proyek';
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Barang_Keluar_" . date('Ymd') . ".xls\"");
         header("Pragma: no-cache");
         header("Expires: 0");
-        
-        echo "<table border='1'>";
+
+        // Warna hijau untuk Barang Keluar
+        $headerBg  = '#2E7D32'; // hijau tua (judul)
+        $headerBg2 = '#388E3C'; // hijau medium (kolom)
+        $stripeBg  = '#E8F5E9'; // hijau muda (baris ganjil)
+
+        echo "<table border='1' style='border-collapse:collapse; font-family:Arial; font-size:14px;'>";
+
+        // Baris judul utama
         echo "<tr>";
-        echo "<th>No</th>";
-        echo "<th>Tanggal</th>";
-        echo "<th>Barang</th>";
-        echo "<th>Proyek</th>";
-        echo "<th>Jumlah</th>";
-        echo "<th>Satuan</th>";
-        echo "<th>Keterangan</th>";
-        echo "<th>Foto Bukti</th>";
+        echo "<td colspan='8' style='background:{$headerBg}; color:#FFFFFF; font-size:20px; font-weight:bold; text-align:center; padding:12px; border:none;'>LAPORAN BARANG KELUAR</td>";
         echo "</tr>";
-        
+
+        // Baris info proyek & tanggal
+        echo "<tr>";
+        echo "<td colspan='4' style='background:#E8F5E9; color:#1B5E20; font-size:14px; padding:6px 10px; border:1px solid #C8E6C9;'>Proyek: <b>" . htmlspecialchars($proyekNama) . "</b></td>";
+        echo "<td colspan='4' style='background:#E8F5E9; color:#1B5E20; font-size:14px; padding:6px 10px; text-align:right; border:1px solid #C8E6C9;'>Tanggal Cetak: <b>" . date('d/m/Y H:i') . "</b></td>";
+        echo "</tr>";
+
+        // Baris kosong pemisah
+        echo "<tr><td colspan='8' style='border:none; padding:4px;'></td></tr>";
+
+        // Header kolom
+        $cols = ['No', 'Tanggal', 'Nama Barang', 'Proyek', 'Jumlah', 'Satuan', 'Keterangan', 'Foto Bukti'];
+        echo "<tr>";
+        foreach ($cols as $col) {
+            echo "<th style='background:{$headerBg2}; color:#FFFFFF; padding:7px 10px; text-align:center; border:1px solid #1B5E20; font-weight:bold;'>" . $col . "</th>";
+        }
+        echo "</tr>";
+
         $no = 1;
         foreach ($keluarList as $k) {
-            echo "<tr>";
-            echo "<td>" . $no++ . "</td>";
-            echo "<td>" . $k['tanggal'] . "</td>";
-            echo "<td>" . htmlspecialchars($k['nama_barang']) . "</td>";
-            echo "<td>" . htmlspecialchars($k['nama_proyek']) . "</td>";
-            echo "<td>" . $k['jumlah'] . "</td>";
-            echo "<td>" . htmlspecialchars($k['satuan']) . "</td>";
-            echo "<td>" . htmlspecialchars($k['keterangan'] ?? '-') . "</td>";
+            $rowBg = ($no % 2 === 0) ? '#FFFFFF' : $stripeBg;
+            echo "<tr style='background:{$rowBg};'>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #C8E6C9;'>" . $no++ . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #C8E6C9;'>" . date('d/m/Y', strtotime($k['tanggal'])) . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #C8E6C9;'>" . htmlspecialchars($k['nama_barang']) . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #C8E6C9;'>" . htmlspecialchars($k['nama_proyek']) . "</td>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #C8E6C9;'>" . number_format($k['jumlah'], 0, ',', '.') . "</td>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #C8E6C9;'>" . htmlspecialchars($k['satuan']) . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #C8E6C9;'>" . htmlspecialchars($k['keterangan'] ?? '-') . "</td>";
             if (!empty($k['foto_bukti'])) {
                 $url = rtrim(BASE_URL, '/') . '/public/' . $k['foto_bukti'];
-                echo "<td><a href='" . $url . "'>Lihat Foto</a></td>";
+                echo "<td style='text-align:center; padding:5px 8px; border:1px solid #C8E6C9;'><a href='" . $url . "' style='color:#2E7D32;'>Lihat Foto</a></td>";
             } else {
-                echo "<td>-</td>";
+                echo "<td style='text-align:center; padding:5px 8px; border:1px solid #C8E6C9; color:#999;'>-</td>";
             }
             echo "</tr>";
         }
+
+        // Baris total
+        $totalItem = count($keluarList);
+        echo "<tr>";
+        echo "<td colspan='4' style='background:{$headerBg2}; color:#FFFFFF; font-weight:bold; text-align:right; padding:6px 10px; border:1px solid #1B5E20;'>TOTAL TRANSAKSI</td>";
+        echo "<td style='background:{$headerBg2}; color:#FFFFFF; font-weight:bold; text-align:center; padding:6px 10px; border:1px solid #1B5E20;'>{$totalItem} transaksi</td>";
+        echo "<td colspan='3' style='background:{$headerBg2}; border:1px solid #1B5E20;'></td>";
+        echo "</tr>";
+
         echo "</table>";
         exit;
     }
@@ -275,35 +328,64 @@ class BarangController {
     public function exportStokExcel() {
         $idProyek = $_SESSION['selected_project_id'] ?? null;
         $barangList = $this->model->getAll($idProyek);
-        
+        $proyekNama = $_SESSION['selected_project_name'] ?? 'Semua Proyek';
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Master_Barang_" . date('Ymd') . ".xls\"");
         header("Pragma: no-cache");
         header("Expires: 0");
-        
-        echo "<table border='1'>";
+
+        // Warna orange untuk Master Barang
+        $headerBg  = '#E65100'; // orange tua (judul)
+        $headerBg2 = '#F57C00'; // orange medium (kolom)
+        $stripeBg  = '#FFF3E0'; // orange muda (baris ganjil)
+
+        echo "<table border='1' style='border-collapse:collapse; font-family:Arial; font-size:14px;'>";
+
+        // Baris judul utama
         echo "<tr>";
-        echo "<th>No</th>";
-        echo "<th>Nama Barang</th>";
-        echo "<th>Satuan</th>";
-        echo "<th>Harga Satuan</th>";
-        echo "<th>Masuk</th>";
-        echo "<th>Keluar</th>";
-        echo "<th>Stok</th>";
+        echo "<td colspan='7' style='background:{$headerBg}; color:#FFFFFF; font-size:20px; font-weight:bold; text-align:center; padding:12px; border:none;'>LAPORAN MASTER BARANG (STOK)</td>";
         echo "</tr>";
-        
+
+        // Baris info proyek & tanggal
+        echo "<tr>";
+        echo "<td colspan='4' style='background:#FFF3E0; color:#BF360C; font-size:14px; padding:6px 10px; border:1px solid #FFCCBC;'>Proyek: <b>" . htmlspecialchars($proyekNama) . "</b></td>";
+        echo "<td colspan='3' style='background:#FFF3E0; color:#BF360C; font-size:14px; padding:6px 10px; text-align:right; border:1px solid #FFCCBC;'>Tanggal Cetak: <b>" . date('d/m/Y H:i') . "</b></td>";
+        echo "</tr>";
+
+        // Baris kosong pemisah
+        echo "<tr><td colspan='7' style='border:none; padding:4px;'></td></tr>";
+
+        // Header kolom
+        $cols = ['No', 'Nama Barang', 'Satuan', 'Harga Satuan (Rp)', 'Total Masuk', 'Total Keluar', 'Stok Akhir'];
+        echo "<tr>";
+        foreach ($cols as $col) {
+            echo "<th style='background:{$headerBg2}; color:#FFFFFF; padding:7px 10px; text-align:center; border:1px solid #BF360C; font-weight:bold;'>" . $col . "</th>";
+        }
+        echo "</tr>";
+
         $no = 1;
         foreach ($barangList as $b) {
-            echo "<tr>";
-            echo "<td>" . $no++ . "</td>";
-            echo "<td>" . htmlspecialchars($b['nama_barang']) . "</td>";
-            echo "<td>" . htmlspecialchars($b['satuan']) . "</td>";
-            echo "<td>" . $b['harga_satuan'] . "</td>";
-            echo "<td>" . $b['total_masuk'] . "</td>";
-            echo "<td>" . $b['total_keluar'] . "</td>";
-            echo "<td>" . $b['stok'] . "</td>";
+            $rowBg = ($no % 2 === 0) ? '#FFFFFF' : $stripeBg;
+            $stokStyle = ($b['stok'] <= 10) ? 'color:#c0392b; font-weight:bold;' : '';
+            echo "<tr style='background:{$rowBg};'>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #FFCCBC;'>" . $no++ . "</td>";
+            echo "<td style='padding:5px 8px; border:1px solid #FFCCBC; font-weight:bold;'>" . htmlspecialchars($b['nama_barang']) . "</td>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #FFCCBC;'>" . htmlspecialchars($b['satuan']) . "</td>";
+            echo "<td style='text-align:right; padding:5px 8px; border:1px solid #FFCCBC;'>" . number_format($b['harga_satuan'], 0, ',', '.') . "</td>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #FFCCBC;'>" . number_format($b['total_masuk'], 0, ',', '.') . "</td>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #FFCCBC;'>" . number_format($b['total_keluar'], 0, ',', '.') . "</td>";
+            echo "<td style='text-align:center; padding:5px 8px; border:1px solid #FFCCBC; {$stokStyle}'>" . number_format($b['stok'], 0, ',', '.') . "</td>";
             echo "</tr>";
         }
+
+        // Baris total
+        $totalJenis = count($barangList);
+        echo "<tr>";
+        echo "<td colspan='6' style='background:{$headerBg2}; color:#FFFFFF; font-weight:bold; text-align:right; padding:6px 10px; border:1px solid #BF360C;'>TOTAL JENIS BARANG</td>";
+        echo "<td style='background:{$headerBg2}; color:#FFFFFF; font-weight:bold; text-align:center; padding:6px 10px; border:1px solid #BF360C;'>{$totalJenis} jenis</td>";
+        echo "</tr>";
+
         echo "</table>";
         exit;
     }
