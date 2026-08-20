@@ -188,7 +188,7 @@ class KeuanganModel {
                        (bm.jumlah * bm.harga_satuan) AS total_nilai
                 FROM barang_masuk bm
                 JOIN barang b ON b.id = bm.id_barang
-                WHERE b.id_proyek = ?
+                                WHERE b.id_proyek = ?
                 ORDER BY bm.tanggal DESC
             ");
             $stmt->execute([$idProyek]);

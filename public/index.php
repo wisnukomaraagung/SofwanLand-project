@@ -11,6 +11,9 @@ define('BASE_URL', $scheme . '://' . $_SERVER['HTTP_HOST'] . $baseFolder);
 
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/config/roles.php';
+if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
+    require_once BASE_PATH . '/vendor/autoload.php';
+}
 
 // Autoload models & controllers
 spl_autoload_register(function ($class) {
@@ -64,6 +67,7 @@ $routes = [
     'keuangan'  => 'KeuanganController',
     'pekerjaan' => 'PekerjaanController',
     'kurva_s'   => 'KurvaSController', 
+    'pengguna'  => 'PenggunaController',
 ];
 
 // Access control middleware
@@ -89,6 +93,13 @@ if (isset($routes[$page])) {
     elseif ($action === 'authenticate') $controller->authenticate();
     elseif ($action === 'logout')       $controller->logout();
     elseif ($action === 'detail')       $controller->detail((int)$id);
+    elseif ($page === 'pengguna' && $action === 'edit') $controller->edit((int)$id);
+    elseif ($page === 'pengguna' && $action === 'update') $controller->update((int)$id);
+    elseif ($page === 'pengguna' && $action === 'delete') $controller->delete((int)$id);
+    elseif ($action === 'storeDokumentasi') $controller->storeDokumentasi((int)$id);
+    elseif ($action === 'deleteDokumentasi') $controller->deleteDokumentasi((int)$id);
+    elseif ($action === 'exportDetailExcel') $controller->exportDetailExcel((int)$id);
+    elseif ($action === 'importDetailExcel') $controller->importDetailExcel((int)$id);
     elseif ($action === 'create')       $controller->create();
     elseif ($action === 'store')        $controller->store();
     elseif ($action === 'storeMasuk')   $controller->storeMasuk();

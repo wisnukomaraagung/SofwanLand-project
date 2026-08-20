@@ -26,7 +26,7 @@ try {
         nama VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
-        role ENUM('admin','manager','user') DEFAULT 'user',
+        role ENUM('admin','manager','owner','user') DEFAULT 'user',
         status ENUM('aktif','nonaktif') DEFAULT 'aktif',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -39,6 +39,7 @@ try {
         tanggal_mulai DATE,
         tanggal_selesai DATE,
         nilai_kontrak DECIMAL(15,2) DEFAULT 0,
+        progress_total DECIMAL(5,2) DEFAULT 0,
         status ENUM('aktif','selesai','pending') DEFAULT 'aktif',
         deskripsi TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -70,6 +71,7 @@ try {
         satuan VARCHAR(50),
         stok INT DEFAULT 0,
         harga_satuan DECIMAL(15,2) DEFAULT 0,
+        id_proyek INT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -131,6 +133,18 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (id_proyek) REFERENCES proyek(id)
     );
+
+    CREATE TABLE IF NOT EXISTS import_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        id_proyek INT NOT NULL,
+        jenis VARCHAR(50) NOT NULL,
+        nama_file VARCHAR(255) NOT NULL,
+        jumlah_data INT DEFAULT 0,
+        status ENUM('berhasil','gagal') NOT NULL,
+        pesan TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (id_proyek) REFERENCES proyek(id) ON DELETE CASCADE
+    );
     ";
 
     // Execute each statement
@@ -140,6 +154,7 @@ try {
             $db->exec($statement);
         }
     }
+    $db->exec("ALTER TABLE barang ADD COLUMN IF NOT EXISTS id_proyek INT NULL");
     echo "✅ All tables created<br><br>";
 
     // 4. Clear and insert sample data
@@ -147,6 +162,7 @@ try {
     $stmt = $db->prepare("INSERT INTO users (nama, email, password, role, status) VALUES (?, ?, ?, ?, 'aktif')");
     $stmt->execute(['Admin Kontraktor', 'admin@sofwan.com', 'admin123', 'admin']);
     $stmt->execute(['Manajer Proyek', 'manager@sofwan.com', 'manager123', 'manager']);
+    $stmt->execute(['Owner Sofwan Land', 'owner@sofwan.com', 'owner123', 'owner']);
     $stmt->execute(['Pekerja', 'user@sofwan.com', 'user123', 'user']);
     echo "✅ User data inserted<br>";
 

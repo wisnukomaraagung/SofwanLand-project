@@ -43,6 +43,9 @@
                     'absensi'  => ['icon' => '◩', 'label' => 'Absensi'],
                     'barang'   => ['icon' => '◧', 'label' => 'Barang'],
                 ];
+                if ($role === 'owner') {
+                    $menuItems['pengguna'] = ['icon' => '◉', 'label' => 'Pengguna'];
+                }
             }
         } else {
             $menuItems = getMenuForRole();

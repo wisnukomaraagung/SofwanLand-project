@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     nama VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('admin','manager','user') DEFAULT 'user',
+    role ENUM('admin','manager','owner','user') DEFAULT 'user',
     status ENUM('aktif','nonaktif') DEFAULT 'aktif',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS proyek (
     tanggal_mulai DATE,
     tanggal_selesai DATE,
     nilai_kontrak DECIMAL(15,2) DEFAULT 0,
+    progress_total DECIMAL(5,2) DEFAULT 0,
     status ENUM('aktif','selesai','pending') DEFAULT 'aktif',
     deskripsi TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS barang (
     satuan VARCHAR(50),
     stok INT DEFAULT 0,
     harga_satuan DECIMAL(15,2) DEFAULT 0,
+    id_proyek INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -125,12 +127,26 @@ CREATE TABLE IF NOT EXISTS dokumentasi (
     FOREIGN KEY (id_proyek) REFERENCES proyek(id)
 );
 
+-- Riwayat import Excel per proyek
+CREATE TABLE IF NOT EXISTS import_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_proyek INT NOT NULL,
+    jenis VARCHAR(50) NOT NULL,
+    nama_file VARCHAR(255) NOT NULL,
+    jumlah_data INT DEFAULT 0,
+    status ENUM('berhasil','gagal') NOT NULL,
+    pesan TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_proyek) REFERENCES proyek(id) ON DELETE CASCADE
+);
+
 -- =============================================
 -- DATA SAMPLE
 -- =============================================
 INSERT INTO users (nama, email, password, role, status) VALUES
 ('Admin Kontraktor', 'admin@sofwan.com', 'admin123', 'admin', 'aktif'),
 ('Manajer Proyek', 'manager@sofwan.com', 'manager123', 'manager', 'aktif'),
+('Owner Sofwan Land', 'owner@sofwan.com', 'owner123', 'owner', 'aktif'),
 ('Pekerja', 'user@sofwan.com', 'user123', 'user', 'aktif');
 
 INSERT INTO proyek (nama_proyek, lokasi, tanggal_mulai, tanggal_selesai, nilai_kontrak, status, deskripsi) VALUES

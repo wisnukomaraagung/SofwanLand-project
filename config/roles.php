@@ -33,6 +33,19 @@ function getRolePermissions(): array
             'manage' => ['proyek', 'keuangan', 'absensi', 'pekerjaan', 'kurva_s'],
             'dashboard_subtitle' => 'Pantau proyek dan laporan keuangan',
         ],
+        'owner' => [
+            'pages' => ['dashboard', 'proyek', 'keuangan', 'barang', 'absensi', 'pekerjaan', 'kurva_s', 'pengguna'],
+            'menu' => [
+                'dashboard' => ['icon' => '◈', 'label' => 'Dashboard'],
+                'proyek'    => ['icon' => '◫', 'label' => 'Proyek'],
+                'keuangan'  => ['icon' => '◪', 'label' => 'Keuangan'],
+                'absensi'   => ['icon' => '◩', 'label' => 'Absensi'],
+                'barang'    => ['icon' => '◧', 'label' => 'Barang'],
+                'pengguna'  => ['icon' => '◉', 'label' => 'Pengguna'],
+            ],
+            'manage' => ['pengguna'],
+            'dashboard_subtitle' => 'Pantau seluruh proyek dan kelola pengguna',
+        ],
         'user' => [
             'pages' => ['absensi'],
             'menu' => [
@@ -91,6 +104,7 @@ function getRoleLabel(?string $role = null): string
     $labels = [
         'admin'   => 'Administrator',
         'manager' => 'Manager',
+        'owner'   => 'Owner',
         'user'    => 'Pekerja',
     ];
 

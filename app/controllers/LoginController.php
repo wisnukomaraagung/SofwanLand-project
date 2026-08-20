@@ -41,7 +41,11 @@ class LoginController {
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
-            if ($user && $password === $user['password']) {
+            $passwordMatches = $user && (
+                password_verify($password, $user['password']) ||
+                hash_equals((string)$user['password'], $password)
+            );
+            if ($passwordMatches) {
                 // Allow admin, manager, and pekerja (user) roles to login.
                 // Role-based access control enforced elsewhere.
 

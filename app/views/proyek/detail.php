@@ -184,6 +184,32 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
         <div class="tab" data-tab="analytics"><i class="ri-bar-chart-2-line"></i> Analytics</div>
         <div class="tab" data-tab="rab"><i class="ri-clipboard-line"></i> RAB & Pekerjaan</div>
         <div class="tab" data-tab="kurva"><i class="ri-line-chart-line"></i> Kurva S</div>
+        <div class="tab" data-tab="import-history"><i class="ri-history-line"></i> Riwayat Import</div>
+    </div>
+
+    <div class="tab-content" id="import-history">
+        <div class="chart-card">
+            <div class="chart-title">Riwayat Import Excel</div>
+            <div class="table-wrap" style="overflow-x:auto;">
+                <table class="custom-table">
+                    <thead><tr><th>Waktu</th><th>Jenis</th><th>Nama File</th><th>Data</th><th>Status</th><th>Pesan</th></tr></thead>
+                    <tbody>
+                    <?php if (empty($importHistory)): ?>
+                        <tr><td colspan="6" style="text-align:center; padding:40px;">Belum ada riwayat import.</td></tr>
+                    <?php else: foreach ($importHistory as $history): ?>
+                        <tr>
+                            <td><?= date('d/m/Y H:i', strtotime($history['created_at'])) ?></td>
+                            <td><?= htmlspecialchars($history['jenis']) ?></td>
+                            <td><?= htmlspecialchars($history['nama_file']) ?></td>
+                            <td><?= (int)$history['jumlah_data'] ?></td>
+                            <td><span class="badge-status" style="background:<?= $history['status'] === 'berhasil' ? '#dcfce7' : '#fee2e2' ?>; color:<?= $history['status'] === 'berhasil' ? '#16a34a' : '#dc2626' ?>;"><?= ucfirst($history['status']) ?></span></td>
+                            <td><?= htmlspecialchars($history['pesan'] ?? '-') ?></td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Tab RAB & Pekerjaan -->
@@ -217,6 +243,8 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
             <a href="<?= BASE_URL ?>/public/index.php?page=pekerjaan&action=create&id_proyek=<?= $proyek['id'] ?>" class="btn btn-primary">
                 <i class="ri-add-line"></i> Tambah Pekerjaan
             </a>
+            <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=exportDetailExcel&id=<?= (int)$proyek['id'] ?>&section=RAB" class="btn btn-outline"><i class="ri-file-excel-2-line"></i> Export Excel RAB</a>
+            <form method="post" action="<?= BASE_URL ?>/public/index.php?page=proyek&action=importDetailExcel&id=<?= (int)$proyek['id'] ?>&section=RAB" enctype="multipart/form-data" style="display:inline-flex; gap:6px; align-items:center;"><input type="file" name="file" accept=".xlsx" required><button type="submit" class="btn btn-outline"><i class="ri-upload-2-line"></i> Import Excel RAB</button></form>
         </div>
         <?php endif; ?>
         
@@ -338,6 +366,8 @@ $sisaBudget = $nilaiKontrak - $totalBiaya;
             <a href="<?= BASE_URL ?>/public/index.php?page=kurva_s&action=create&id_proyek=<?= $proyek['id'] ?>" class="btn btn-primary">
                 <i class="ri-add-line"></i> Tambah Data Mingguan
             </a>
+            <a href="<?= BASE_URL ?>/public/index.php?page=proyek&action=exportDetailExcel&id=<?= (int)$proyek['id'] ?>&section=Kurva%20S" class="btn btn-outline"><i class="ri-file-excel-2-line"></i> Export Excel Kurva S</a>
+            <form method="post" action="<?= BASE_URL ?>/public/index.php?page=proyek&action=importDetailExcel&id=<?= (int)$proyek['id'] ?>&section=Kurva%20S" enctype="multipart/form-data" style="display:inline-flex; gap:6px; align-items:center;"><input type="file" name="file" accept=".xlsx" required><button type="submit" class="btn btn-outline"><i class="ri-upload-2-line"></i> Import Excel Kurva S</button></form>
         </div>
         <?php endif; ?>
         
@@ -538,6 +568,32 @@ if(document.getElementById('kurvaSChartProyek')) {
 
     <!-- Tab Dokumentasi -->
     <div class="tab-content" id="dokumentasi">
+        <?php if (roleCanManage('proyek')): ?>
+        <div class="chart-card" style="margin-bottom:20px;">
+            <div class="chart-title">Tambah Dokumentasi Proyek</div>
+            <form method="post" action="<?= BASE_URL ?>/public/index.php?page=proyek&action=storeDokumentasi&id=<?= (int)$proyek['id'] ?>" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Judul Dokumentasi</label>
+                        <input type="text" name="judul" placeholder="Contoh: Pekerjaan pondasi">
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal</label>
+                        <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required>
+                    </div>
+                    <div class="form-group form-full">
+                        <label>Foto Dokumentasi</label>
+                        <input type="file" name="file_dokumentasi" accept="image/jpeg,image/png,image/webp" required>
+                    </div>
+                    <div class="form-group form-full">
+                        <label>Keterangan</label>
+                        <textarea name="keterangan" rows="2" placeholder="Keterangan pekerjaan atau lokasi"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="ri-upload-2-line"></i> Simpan Dokumentasi</button>
+            </form>
+        </div>
+        <?php endif; ?>
         <div class="filter-bar"><input type="text" id="search-doc" class="filter-input" placeholder="Cari dokumentasi..." onkeyup="filterDocCards()"></div>
         <div class="gallery-grid" id="gallery-container"></div>
     </div>
@@ -560,6 +616,7 @@ const expenseData = <?= json_encode($pengeluaranList) ?>;
 const pekerjaanList = <?= json_encode($rincianPekerjaan) ?>;
 const dokumentasiList = <?= json_encode($dokumentasiList) ?>;
 const kurvaData = <?= json_encode($kurvaData) ?>;
+const documentationBaseUrl = <?= json_encode(rtrim(BASE_URL, '/') . '/public/') ?>;
 
 // Render functions
 function renderWorkList() {
@@ -595,7 +652,7 @@ function renderGallery() {
     if(dokumentasiList.length === 0) { container.innerHTML = '<div class="alert-box info">Belum ada dokumentasi</div>'; return; }
     const search = document.getElementById('search-doc')?.value.toLowerCase() || '';
     const filtered = dokumentasiList.filter(d => d.judul?.toLowerCase().includes(search));
-    container.innerHTML = filtered.map(d => `<div class="gallery-card"><img src="${d.file_path || 'https://via.placeholder.com/280x220'}" onerror="this.src='https://via.placeholder.com/280x220'"><div class="gallery-body"><h4>${d.judul}</h4><small>${new Date(d.tanggal).toLocaleDateString('id-ID')}</small><div class="job-progress"><span style="width:${d.progress || 0}%"></span></div></div></div>`).join('');
+    container.innerHTML = filtered.map(d => { const path = d.file_path || ''; const imageUrl = path.startsWith('http') ? path : documentationBaseUrl + path.replace(/^\/+/, ''); const deleteButton = <?= roleCanManage('proyek') ? 'true' : 'false' ?> ? `<a href="javascript:void(0)" onclick="confirmDelete('${<?= json_encode(BASE_URL) ?>}/public/index.php?page=proyek&action=deleteDokumentasi&id=${d.id}&id_proyek=<?= (int)$proyek['id'] ?>', 'dokumentasi ini')" class="btn" style="background:#dc2626;color:white;padding:6px 10px;font-size:12px;margin-top:10px;">Hapus</a>` : ''; return `<div class="gallery-card"><img src="${imageUrl || 'https://via.placeholder.com/280x220'}" onerror="this.src='https://via.placeholder.com/280x220'"><div class="gallery-body"><h4>${d.judul || 'Dokumentasi'}</h4><small>${new Date(d.tanggal).toLocaleDateString('id-ID')}</small>${deleteButton}</div></div>`; }).join('');
 }
 
 function renderRecentActivities() {

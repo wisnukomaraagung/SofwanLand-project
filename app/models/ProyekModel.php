@@ -188,6 +188,39 @@ class ProyekModel {
         $stmt->execute([$id]);
         return $stmt->fetchAll();
     }
+
+    public function createDokumentasi(array $data): bool {
+        $stmt = $this->db->prepare("INSERT INTO dokumentasi (id_proyek, judul, file_path, keterangan, tanggal) VALUES (?, ?, ?, ?, ?)");
+        return $stmt->execute([
+            $data['id_proyek'],
+            $data['judul'],
+            $data['file_path'],
+            $data['keterangan'],
+            $data['tanggal'],
+        ]);
+    }
+
+    public function getDokumentasiById(int $id, int $idProyek): ?array {
+        $stmt = $this->db->prepare("SELECT * FROM dokumentasi WHERE id = ? AND id_proyek = ?");
+        $stmt->execute([$id, $idProyek]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function deleteDokumentasi(int $id, int $idProyek): bool {
+        $stmt = $this->db->prepare("DELETE FROM dokumentasi WHERE id = ? AND id_proyek = ?");
+        return $stmt->execute([$id, $idProyek]) && $stmt->rowCount() > 0;
+    }
+
+    public function getImportHistory(int $id): array {
+        $stmt = $this->db->prepare("SELECT * FROM import_history WHERE id_proyek = ? ORDER BY created_at DESC, id DESC");
+        $stmt->execute([$id]);
+        return $stmt->fetchAll();
+    }
+
+    public function recordImport(int $id, string $jenis, string $namaFile, int $jumlahData, string $status, string $pesan = ''): void {
+        $stmt = $this->db->prepare("INSERT INTO import_history (id_proyek, jenis, nama_file, jumlah_data, status, pesan) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$id, $jenis, $namaFile, $jumlahData, $status, $pesan]);
+    }
     
     public function create(array $data): bool {
         $stmt = $this->db->prepare("
